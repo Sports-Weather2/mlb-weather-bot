@@ -1,0 +1,22 @@
+{
+  "games": [
+    {
+      "date": "2024-04-05",
+      "time": "19:05",
+      "opponent": "Dodgers",
+      "location": "Los Angeles,US"
+    },
+    {
+      "date": "2024-04-06",
+      "time": "19:05",
+      "opponent": "Giants",
+      "location": "Los Angeles,US"
+    },
+    {
+      "date": "2024-04-07",
+      "time": "13:05",
+      "opponent": "Padres",
+      "location": "Los Angeles,US"
+    }
+  ]
+}
