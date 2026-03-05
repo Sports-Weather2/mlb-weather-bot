@@ -1,0 +1,26 @@
+name: Weather Bot Updates
+
+on:
+  schedule:
+    - cron: '0 13,17,21,1 * * *'
+  workflow_dispatch:
+
+jobs:
+  post-weather:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      
+      - name: Run weather bot
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
+        run: python weather_bot.py
