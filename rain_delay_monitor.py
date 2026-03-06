@@ -34,9 +34,6 @@ def check_mlb_game_status():
     Note: This is a simplified version. In production, you'd integrate with MLB's API
     or scraping real-time game status.
     """
-    # For Spring Training, we'll check weather conditions during game time
-    # If severe weather detected, send alert
-    
     games = get_games_in_progress()
     
     if not games:
@@ -74,8 +71,6 @@ def is_game_threatening_weather(weather):
     if weather['has_thunderstorm']:
         return True
     if weather['rain'] > 0.1:  # More than 0.1 inches per hour
-        return True
-    if weather['wind_speed'] > 25:
         return True
     return False
 
@@ -128,8 +123,6 @@ def send_delay_alert(game, weather):
         alerts.append("• ⚡ Thunderstorm detected - Lightning delay likely")
     if weather['rain'] > 0.1:
         alerts.append(f"• 🌧️ Heavy rain detected ({weather['rain']:.2f} in/hr)")
-    if weather['wind_speed'] > 25:
-        alerts.append(f"• 💨 High winds ({weather['wind_speed']:.0f} mph)")
     
     alert_text = "\n".join(alerts)
     message["blocks"].append({
