@@ -25,6 +25,6 @@ jobs:
       
       - name: Send high-risk alerts
         env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK: ${{ secrets.HIGH_RISK_WEBHOOK_URL }}
           WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
         run: python high_risk_alert.py
