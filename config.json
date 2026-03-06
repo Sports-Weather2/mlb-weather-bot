@@ -2,27 +2,99 @@
   "games": [
     {
       "date": "2026-03-06",
-      "time": "13:05",
-      "opponent": "Dodgers vs Giants (Spring)",
+      "time": "10:05",
+      "opponent": "Nationals vs Astros",
+      "location": "West Palm Beach,US"
+    },
+    {
+      "date": "2026-03-06",
+      "time": "10:05",
+      "opponent": "Phillies vs Pirates",
+      "location": "Clearwater,US"
+    },
+    {
+      "date": "2026-03-06",
+      "time": "10:05",
+      "opponent": "Red Sox vs Tigers",
+      "location": "Fort Myers,US"
+    },
+    {
+      "date": "2026-03-06",
+      "time": "10:05",
+      "opponent": "Cardinals vs Orioles",
+      "location": "Jupiter,US"
+    },
+    {
+      "date": "2026-03-06",
+      "time": "10:07",
+      "opponent": "Pirates vs Blue Jays",
+      "location": "Dunedin,US"
+    },
+    {
+      "date": "2026-03-06",
+      "time": "12:05",
+      "opponent": "Reds vs Giants",
+      "location": "Scottsdale,US"
+    },
+    {
+      "date": "2026-03-06",
+      "time": "12:05",
+      "opponent": "Mariners vs Rangers",
+      "location": "Surprise,US"
+    },
+    {
+      "date": "2026-03-06",
+      "time": "12:05",
+      "opponent": "Rockies vs Athletics",
+      "location": "Mesa,US"
+    },
+    {
+      "date": "2026-03-06",
+      "time": "12:05",
+      "opponent": "Angels vs Guardians",
+      "location": "Tempe,US"
+    },
+    {
+      "date": "2026-03-06",
+      "time": "12:10",
+      "opponent": "White Sox vs Diamondbacks",
       "location": "Phoenix,US"
     },
     {
       "date": "2026-03-06",
-      "time": "13:10",
-      "opponent": "Yankees vs Red Sox (Spring)",
+      "time": "12:10",
+      "opponent": "Diamondbacks vs Brewers",
+      "location": "Phoenix,US"
+    },
+    {
+      "date": "2026-03-06",
+      "time": "15:05",
+      "opponent": "Braves vs Twins",
+      "location": "Fort Myers,US"
+    },
+    {
+      "date": "2026-03-06",
+      "time": "15:35",
+      "opponent": "Rays vs Yankees",
       "location": "Tampa,US"
     },
     {
-      "date": "2026-03-07",
-      "time": "13:05",
-      "opponent": "Angels vs Padres (Spring)",
-      "location": "Tempe,US"
+      "date": "2026-03-06",
+      "time": "16:10",
+      "opponent": "Mets vs Marlins",
+      "location": "Jupiter,US"
     },
     {
-      "date": "2026-03-07",
-      "time": "13:10",
-      "opponent": "Mets vs Cardinals (Spring)",
-      "location": "Jupiter,US"
+      "date": "2026-03-06",
+      "time": "17:05",
+      "opponent": "Royals vs Dodgers",
+      "location": "Phoenix,US"
+    },
+    {
+      "date": "2026-03-06",
+      "time": "17:10",
+      "opponent": "Cubs vs Padres",
+      "location": "Peoria,US"
     }
   ]
 }
