@@ -264,6 +264,11 @@ def main():
     
     print(f"\n📊 Games sorted by risk level (HIGH_RISK → MONITOR → CLEAR)")
     
+    # Limit to 10 games to stay under Slack's 50-block limit
+    if len(upcoming_games) > 10:
+        print(f"⚠️ Limiting to top 10 games (total available: {len(upcoming_games)})")
+        upcoming_games = upcoming_games[:10]
+    
     message = build_slack_message(upcoming_games)
     
     if post_to_slack(message):
