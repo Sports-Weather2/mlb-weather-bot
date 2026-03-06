@@ -2,7 +2,7 @@ import json
 import requests
 from datetime import datetime, timedelta
 
-def get_mlb_schedule(days_ahead=2):
+def get_mlb_schedule(days_ahead=1):
     """Fetch MLB schedule for next X days using MLB Stats API"""
     games = []
     
@@ -117,16 +117,11 @@ def update_config_file(games):
 def main():
     print("🔄 Fetching MLB schedule...")
     
-    # Get next 2 days of games
-    games = get_mlb_schedule(days_ahead=2)
-    
-    # Limit to 15 games max to avoid Slack block limit
-    if len(games) > 15:
-        print(f"⚠️ Found {len(games)} games, limiting to first 15 to stay under Slack limits")
-        games = games[:15]
+    # Get next 24 hours of games only
+    games = get_mlb_schedule(days_ahead=1)
     
     if games:
-        print(f"📅 Updating config with {len(games)} games")
+        print(f"📅 Found {len(games)} games in next 24 hours")
         update_config_file(games)
     else:
         print("⚠️ No games found - keeping existing config.json")
