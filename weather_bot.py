@@ -173,7 +173,7 @@ def build_slack_message(games_weather):
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": f"*{summary}* | Next 48 Hours"
+                    "text": f"*{summary}* | Next 24 Hours"
                 }
             },
             {
@@ -181,7 +181,7 @@ def build_slack_message(games_weather):
                 "elements": [
                     {
                         "type": "mrkdwn",
-                        "text": f"Updated: {now.strftime('%b %d at %I:%M %p')} | Next update: {(now + timedelta(hours=4)).strftime('%I:%M %p')}"
+                        "text": f"Updated: {now.strftime('%b %d at %I:%M %p')} | Next update: {(now + timedelta(hours=5)).strftime('%I:%M %p')}"
                     }
                 ]
             },
@@ -257,6 +257,12 @@ def main():
     if not upcoming_games:
         print("ℹ️  No games in next 48 hours - skipping update")
         return
+    
+    # Sort games by risk level: HIGH_RISK first, MONITOR second, CLEAR last
+    risk_priority = {'HIGH_RISK': 0, 'MONITOR': 1, 'CLEAR': 2}
+    upcoming_games.sort(key=lambda x: risk_priority[x['impact']['level']])
+    
+    print(f"\n📊 Games sorted by risk level (HIGH_RISK → MONITOR → CLEAR)")
     
     message = build_slack_message(upcoming_games)
     
