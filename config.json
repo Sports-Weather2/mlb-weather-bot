@@ -2,21 +2,27 @@
   "games": [
     {
       "date": "2026-03-06",
-      "time": "19:30",
-      "opponent": "Lakers vs Warriors",
-      "location": "Los Angeles,CA,US"
+      "time": "13:05",
+      "opponent": "Dodgers vs Giants (Spring)",
+      "location": "Phoenix,AZ,US"
     },
     {
       "date": "2026-03-06",
-      "time": "20:00",
-      "opponent": "Celtics vs Heat",
-      "location": "Boston,MA,US"
+      "time": "13:10",
+      "opponent": "Yankees vs Red Sox (Spring)",
+      "location": "Tampa,FL,US"
     },
     {
       "date": "2026-03-07",
-      "time": "19:00",
-      "opponent": "Knicks vs Nets",
-      "location": "New York,NY,US"
+      "time": "13:05",
+      "opponent": "Angels vs Padres (Spring)",
+      "location": "Tempe,AZ,US"
+    },
+    {
+      "date": "2026-03-07",
+      "time": "13:10",
+      "opponent": "Mets vs Cardinals (Spring)",
+      "location": "Port St Lucie,FL,US"
     }
   ]
 }
