@@ -2,7 +2,7 @@ import json
 import requests
 from datetime import datetime, timedelta
 
-def get_mlb_schedule(days_ahead=7):
+def get_mlb_schedule(days_ahead=2):
     """Fetch MLB schedule for next X days using MLB Stats API"""
     games = []
     
