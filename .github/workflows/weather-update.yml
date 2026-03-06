@@ -1,8 +1,9 @@
-name: Weather Bot Updates
+name: Daily Weather Report
 
 on:
   schedule:
-    - cron: '0 15,20 * * *'
+    # Runs at 7 AM PT only (daily full report)
+    - cron: '0 14 * * *'
   workflow_dispatch:
 
 jobs:
