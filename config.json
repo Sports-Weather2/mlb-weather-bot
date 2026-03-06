@@ -1,22 +1,22 @@
 {
   "games": [
     {
-      "date": "2024-04-05",
-      "time": "19:05",
-      "opponent": "Dodgers",
-      "location": "Los Angeles,US"
+      "date": "2026-03-06",
+      "time": "19:30",
+      "opponent": "Lakers vs Warriors",
+      "location": "Los Angeles,CA,US"
     },
     {
-      "date": "2024-04-06",
-      "time": "19:05",
-      "opponent": "Giants",
-      "location": "Los Angeles,US"
+      "date": "2026-03-06",
+      "time": "20:00",
+      "opponent": "Celtics vs Heat",
+      "location": "Boston,MA,US"
     },
     {
-      "date": "2024-04-07",
-      "time": "13:05",
-      "opponent": "Padres",
-      "location": "Los Angeles,US"
+      "date": "2026-03-07",
+      "time": "19:00",
+      "opponent": "Knicks vs Nets",
+      "location": "New York,NY,US"
     }
   ]
 }
