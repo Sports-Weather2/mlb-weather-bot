@@ -2,7 +2,7 @@ name: Weather Bot Updates
 
 on:
   schedule:
-    - cron: '0 13,17,21,1 * * *'
+    - cron: '0 15,20 * * *'  # 8AM PDT = 3PM UTC, 1PM PDT = 8PM UTC
   workflow_dispatch:
 
 jobs:
