@@ -1,0 +1,29 @@
+name: Rain Delay Monitor
+
+on:
+  schedule:
+    # Run every 15 minutes during typical game hours (10AM - 8PM PT)
+    # 10AM PT = 6PM UTC, 8PM PT = 4AM UTC (next day)
+    - cron: '*/15 18-23 * * *'  # 10AM-4PM PT
+    - cron: '*/15 0-4 * * *'    # 4PM-8PM PT
+  workflow_dispatch:
+
+jobs:
+  check-delays:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies
+        run: pip install requests
+      
+      - name: Monitor for delays
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
+        run: python rain_delay_monitor.py
