@@ -1,6 +1,28 @@
+name: Rain Delay Monitor
+
 on:
   schedule:
     # Every 10 minutes from 10 AM to Midnight PT
-    - cron: '*/10 17-23 * * *'  # 10AM-4PM PT
-    - cron: '*/10 0-7 * * *'    # 4PM-Midnight PT (extended)
+    - cron: '*/10 17-23 * * *'  # 10AM-4PM PT (every 10 min)
+    - cron: '*/10 0-7 * * *'    # 4PM-Midnight PT (every 10 min, extended)
   workflow_dispatch:
+
+jobs:
+  check-delays:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies
+        run: pip install requests
+      
+      - name: Monitor for delays
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
+        run: python rain_delay_monitor.py
