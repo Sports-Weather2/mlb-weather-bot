@@ -2,7 +2,7 @@ name: Weather Bot Updates
 
 on:
   schedule:
-    - cron: '0 15,20 * * *'  # 8AM & 1PM Pacific (DST)
+    - cron: '0 15,20 * * *'
   workflow_dispatch:
 
 jobs:
@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
       
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -18,6 +20,17 @@ jobs:
       
       - name: Install dependencies
         run: pip install -r requirements.txt
+      
+      - name: Update game schedule
+        run: python update_schedule.py
+      
+      - name: Commit updated schedule
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add config.json
+          git diff --quiet && git diff --staged --quiet || git commit -m "Auto-update game schedule [skip ci]"
+          git push
       
       - name: Run weather bot
         env:
