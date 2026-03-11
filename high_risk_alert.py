@@ -1,6 +1,7 @@
 import os
 import json
 import requests
+import pytz
 from datetime import datetime, timedelta
 
 SLACK_WEBHOOK = os.environ.get('SLACK_WEBHOOK')
@@ -61,7 +62,9 @@ def is_high_risk(weather):
 
 def build_high_risk_message(high_risk_games):
     """Build Slack message for high-risk games only"""
-    now = datetime.now()
+    # Get current time in Pacific timezone
+    pacific_tz = pytz.timezone('America/Los_Angeles')
+    now = datetime.now(pacific_tz)
     
     if not high_risk_games:
         # No high-risk games - send all clear message
@@ -88,7 +91,7 @@ def build_high_risk_message(high_risk_games):
                     "elements": [
                         {
                             "type": "mrkdwn",
-                            "text": f"Checked at {now.strftime('%I:%M %p')} | Next check: {(now + timedelta(hours=3)).strftime('%I:%M %p')}"
+                            "text": f"Checked at {now.strftime('%I:%M %p')} PT | Next check: {(now + timedelta(hours=3)).strftime('%I:%M %p')} PT"
                         }
                     ]
                 }
@@ -119,7 +122,7 @@ def build_high_risk_message(high_risk_games):
                 "elements": [
                     {
                         "type": "mrkdwn",
-                        "text": f"Updated: {now.strftime('%I:%M %p')} | Next check: {(now + timedelta(hours=3)).strftime('%I:%M %p')}"
+                        "text": f"Updated: {now.strftime('%I:%M %p')} PT | Next check: {(now + timedelta(hours=3)).strftime('%I:%M %p')} PT"
                     }
                 ]
             },
@@ -186,7 +189,8 @@ def post_to_slack(message):
 
 def main():
     games = load_games()
-    now = datetime.now()
+    pacific_tz = pytz.timezone('America/Los_Angeles')
+    now = datetime.now(pacific_tz)
     high_risk_games = []
     
     print(f"🔍 Checking for high-risk weather games...")
@@ -195,7 +199,7 @@ def main():
         game_datetime = datetime.strptime(f"{game['date']} {game['time']}", "%Y-%m-%d %H:%M")
         
         # Check games within next 48 hours
-        if now <= game_datetime <= now + timedelta(hours=48):
+        if now.replace(tzinfo=None) <= game_datetime <= now.replace(tzinfo=None) + timedelta(hours=48):
             weather = get_weather_forecast(game['location'], game_datetime)
             
             if is_high_risk(weather):
