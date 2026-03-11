@@ -1,6 +1,7 @@
 import os
 import json
 import requests
+import pytz
 from datetime import datetime, timedelta
 
 SLACK_WEBHOOK = os.environ.get('SLACK_WEBHOOK')
@@ -143,7 +144,9 @@ def format_game_block(game, weather, impact):
     return blocks
 
 def build_slack_message(games_weather):
-    now = datetime.now()
+    # Get current time in Pacific timezone
+    pacific_tz = pytz.timezone('America/Los_Angeles')
+    now = datetime.now(pacific_tz)
     
     high_risk_count = sum(1 for g in games_weather if g['impact']['level'] == 'HIGH_RISK')
     monitor_count = sum(1 for g in games_weather if g['impact']['level'] == 'MONITOR')
@@ -181,7 +184,7 @@ def build_slack_message(games_weather):
                 "elements": [
                     {
                         "type": "mrkdwn",
-                        "text": f"Updated: {now.strftime('%b %d at %I:%M %p')} | Next update: {(now + timedelta(hours=5)).strftime('%I:%M %p')}"
+                        "text": f"Updated: {now.strftime('%b %d at %I:%M %p')} PT | Next update: 7:00 AM PT tomorrow"
                     }
                 ]
             },
@@ -229,7 +232,8 @@ def post_to_slack(message):
 
 def main():
     games = load_games()
-    now = datetime.now()
+    pacific_tz = pytz.timezone('America/Los_Angeles')
+    now = datetime.now(pacific_tz)
     upcoming_games = []
     
     print(f"🔍 Checking weather for games...")
@@ -240,7 +244,7 @@ def main():
             "%Y-%m-%d %H:%M"
         )
         
-        if now <= game_datetime <= now + timedelta(hours=48):
+        if now.replace(tzinfo=None) <= game_datetime <= now.replace(tzinfo=None) + timedelta(hours=48):
             print(f"  📅 {game['opponent']} - {game['date']} {game['time']}")
             
             weather = get_weather_forecast(game['location'], game_datetime)
