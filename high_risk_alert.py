@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 
 SLACK_WEBHOOK = os.environ.get('SLACK_WEBHOOK')
 WEATHER_API_KEY = os.environ.get('WEATHER_API_KEY')
-ALERT_MODE = os.environ.get('ALERT_MODE', 'monitor')  # 'daily' or 'monitor'
 WEATHER_BASE_URL = "https://api.openweathermap.org/data/2.5/forecast"
 
 IMPACT_RULES = {
@@ -60,127 +59,45 @@ def is_high_risk(weather):
         return True
     return False
 
-def build_daily_report(all_games_data):
-    """Build morning daily report - shows all games with risk levels"""
+def build_high_risk_message(high_risk_games):
+    """Build Slack message for high-risk games only"""
     now = datetime.now()
-    high_risk = [g for g in all_games_data if g['is_high_risk']]
-    normal = [g for g in all_games_data if not g['is_high_risk']]
     
-    message = {
-        "text": f"☀️ Morning Weather Report: {len(all_games_data)} games in next 48hrs",
-        "blocks": [
-            {
-                "type": "header",
-                "text": {
-                    "type": "plain_text",
-                    "text": "☀️ Daily Weather Report",
-                    "emoji": True
-                }
-            },
-            {
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": f"*Games in next 48 hours:* {len(all_games_data)}\n🔴 High Risk: {len(high_risk)} | ✅ Normal: {len(normal)}"
-                }
-            },
-            {
-                "type": "context",
-                "elements": [
-                    {
-                        "type": "mrkdwn",
-                        "text": f"Daily Report | {now.strftime('%A, %B %d at %I:%M %p')} | Next monitoring checks every 15 min during game hours"
+    if not high_risk_games:
+        # No high-risk games - send all clear message
+        return {
+            "text": "✅ No high-risk weather games",
+            "blocks": [
+                {
+                    "type": "header",
+                    "text": {
+                        "type": "plain_text",
+                        "text": "✅ All Clear - No High-Risk Weather Games",
+                        "emoji": True
                     }
-                ]
-            },
-            {
-                "type": "divider"
-            }
-        ]
-    }
-    
-    # Add high-risk games first
-    if high_risk:
-        message["blocks"].append({
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": "*🔴 HIGH RISK GAMES*"
-            }
-        })
-        
-        for game_data in high_risk:
-            game = game_data['game']
-            weather = game_data['weather']
-            
-            game_datetime = datetime.strptime(f"{game['date']} {game['time']}", "%Y-%m-%d %H:%M")
-            date_str = game_datetime.strftime("%a %b %d")
-            time_str = game_datetime.strftime("%I:%M %p")
-            
-            weather_details = f"🌡️ {weather['temp']:.0f}°F | "
-            weather_details += f"💧 {weather['rain_prob']:.0f}% rain | "
-            weather_details += f"💨 {weather['wind_speed']:.0f} mph"
-            
-            if weather['wind_gust'] > weather['wind_speed'] + 5:
-                weather_details += f" (gusts {weather['wind_gust']:.0f})"
-            
-            if weather['has_thunderstorm']:
-                weather_details += " | ⚡ T-storms"
-            
-            message["blocks"].append({
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": f"*{game['opponent']}* - {date_str} at {time_str}\n{weather_details}"
+                },
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": "No games currently at high risk due to weather."
+                    }
+                },
+                {
+                    "type": "context",
+                    "elements": [
+                        {
+                            "type": "mrkdwn",
+                            "text": f"Checked at {now.strftime('%I:%M %p')} | Next check: {(now + timedelta(hours=3)).strftime('%I:%M %p')}"
+                        }
+                    ]
                 }
-            })
+            ]
+        }
     
-    # Add normal games
-    if normal:
-        message["blocks"].append({"type": "divider"})
-        message["blocks"].append({
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": "*✅ NORMAL CONDITIONS*"
-            }
-        })
-        
-        for game_data in normal:
-            game = game_data['game']
-            weather = game_data['weather']
-            
-            game_datetime = datetime.strptime(f"{game['date']} {game['time']}", "%Y-%m-%d %H:%M")
-            date_str = game_datetime.strftime("%a %b %d")
-            time_str = game_datetime.strftime("%I:%M %p")
-            
-            weather_details = f"🌡️ {weather['temp']:.0f}°F | 💧 {weather['rain_prob']:.0f}% | 💨 {weather['wind_speed']:.0f} mph"
-            
-            message["blocks"].append({
-                "type": "section",
-                "text": {
-                    "type": "mrkdwn",
-                    "text": f"*{game['opponent']}* - {date_str} at {time_str}\n{weather_details}"
-                }
-            })
-    
-    if not all_games_data:
-        message["blocks"].append({
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": "_No games scheduled in the next 48 hours_"
-            }
-        })
-    
-    return message
-
-def build_live_alert(high_risk_games):
-    """Build live monitoring alert - only for high-risk games"""
-    now = datetime.now()
-    
+    # High-risk games exist - build alert
     message = {
-        "text": f"🚨 LIVE ALERT: {len(high_risk_games)} HIGH RISK game(s)",
+        "text": f"🚨 {len(high_risk_games)} HIGH RISK weather game(s)",
         "blocks": [
             {
                 "type": "header",
@@ -194,7 +111,7 @@ def build_live_alert(high_risk_games):
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": f"*{len(high_risk_games)} game(s)* now at HIGH RISK - immediate attention needed"
+                    "text": f"*{len(high_risk_games)} game(s) at HIGH RISK* requiring attention for daypart/guide adjustments"
                 }
             },
             {
@@ -202,7 +119,7 @@ def build_live_alert(high_risk_games):
                 "elements": [
                     {
                         "type": "mrkdwn",
-                        "text": f"Live Monitor | {now.strftime('%I:%M %p')} | Next check in 15 minutes"
+                        "text": f"Updated: {now.strftime('%I:%M %p')} | Next check: {(now + timedelta(hours=3)).strftime('%I:%M %p')}"
                     }
                 ]
             },
@@ -212,6 +129,7 @@ def build_live_alert(high_risk_games):
         ]
     }
     
+    # Add each high-risk game
     for game_data in high_risk_games:
         game = game_data['game']
         weather = game_data['weather']
@@ -230,21 +148,24 @@ def build_live_alert(high_risk_games):
         if weather['has_thunderstorm']:
             weather_details += " | ⚡ *Thunderstorms*"
         
-        message["blocks"].append({
+        game_block = {
             "type": "section",
             "text": {
                 "type": "mrkdwn",
                 "text": f"*🔴 {game['opponent']}*\n{date_str} at {time_str}\n{weather_details}"
             }
-        })
+        }
+        
+        message["blocks"].append(game_block)
         message["blocks"].append({"type": "divider"})
     
+    # Add footer with legend
     message["blocks"].append({
         "type": "context",
         "elements": [
             {
                 "type": "mrkdwn",
-                "text": "🔴 *HIGH RISK* = >70% rain OR thunderstorms OR extreme temps OR high winds (>30mph)"
+                "text": "🔴 *HIGH RISK* = >70% rain OR thunderstorms OR extreme temps OR high winds"
             }
         ]
     })
@@ -266,11 +187,9 @@ def post_to_slack(message):
 def main():
     games = load_games()
     now = datetime.now()
-    all_games_data = []
     high_risk_games = []
     
-    print(f"🔍 Mode: {ALERT_MODE.upper()}")
-    print(f"🔍 Checking weather for games in next 48 hours...")
+    print(f"🔍 Checking for high-risk weather games...")
     
     for game in games:
         game_datetime = datetime.strptime(f"{game['date']} {game['time']}", "%Y-%m-%d %H:%M")
@@ -278,45 +197,26 @@ def main():
         # Check games within next 48 hours
         if now <= game_datetime <= now + timedelta(hours=48):
             weather = get_weather_forecast(game['location'], game_datetime)
-            is_risk = is_high_risk(weather)
             
-            game_data = {
-                'game': game,
-                'weather': weather,
-                'is_high_risk': is_risk
-            }
-            
-            all_games_data.append(game_data)
-            
-            if is_risk:
-                high_risk_games.append(game_data)
+            if is_high_risk(weather):
+                high_risk_games.append({
+                    'game': game,
+                    'weather': weather
+                })
                 print(f"  🔴 HIGH RISK: {game['opponent']} - {game['date']} {game['time']}")
-            else:
-                print(f"  ✅ Normal: {game['opponent']} - {game['date']} {game['time']}")
     
-    print(f"\n📊 Total games: {len(all_games_data)} | High-risk: {len(high_risk_games)}")
+    print(f"\n📊 Found {len(high_risk_games)} high-risk game(s)")
     
-    # Decide what to post based on mode
-    if ALERT_MODE == 'daily':
-        # Morning report - always post full summary
-        print("📬 Posting daily morning report...")
-        message = build_daily_report(all_games_data)
-        if post_to_slack(message):
-            print(f"✅ Daily report posted ({len(all_games_data)} games)")
-        else:
-            print("❌ Failed to post daily report")
+    # Always build and post message (either alerts or all-clear)
+    message = build_high_risk_message(high_risk_games)
     
-    else:  # monitor mode
-        # Live monitoring - only post if high-risk
+    if post_to_slack(message):
         if high_risk_games:
-            print("🚨 High-risk weather detected - posting alert...")
-            message = build_live_alert(high_risk_games)
-            if post_to_slack(message):
-                print(f"✅ Live alert posted for {len(high_risk_games)} game(s)")
-            else:
-                print("❌ Failed to post live alert")
+            print(f"✅ High-risk alert posted for {len(high_risk_games)} game(s)")
         else:
-            print("✅ No high-risk weather - silent check (no alert needed)")
+            print("✅ All-clear message posted")
+    else:
+        print("❌ Failed to post to Slack")
 
 if __name__ == "__main__":
     main()
