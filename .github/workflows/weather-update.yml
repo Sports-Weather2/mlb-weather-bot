@@ -2,8 +2,7 @@ name: Daily Weather Report
 
 on:
   schedule:
-    # Runs at 7 AM PT only (daily full report)
-    - cron: '0 14 * * *'
+    - cron: '0 14,15 * * *'
   workflow_dispatch:
 
 jobs:
@@ -20,10 +19,24 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
       
+      - name: Check if it's 7 AM Pacific Time
+        id: check_time
+        run: |
+          HOUR=$(TZ='America/Los_Angeles' date +%H)
+          if [ "$HOUR" -eq "07" ]; then
+            echo "should_run=true" >> $GITHUB_OUTPUT
+            echo "✅ It's 7 AM PT - proceeding"
+          else
+            echo "should_run=false" >> $GITHUB_OUTPUT
+            echo "⏭️ Not 7 AM PT - skipping"
+          fi
+      
       - name: Update game schedule
+        if: steps.check_time.outputs.should_run == 'true'
         run: python update_schedule.py
       
       - name: Run weather bot
+        if: steps.check_time.outputs.should_run == 'true'
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
           WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
