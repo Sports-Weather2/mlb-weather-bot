@@ -1,6 +1,7 @@
 import json
 import requests
 from datetime import datetime, timedelta
+import pytz
 
 def get_mlb_schedule(days_ahead=1):
     """Fetch MLB schedule for next X days using MLB Stats API"""
@@ -21,16 +22,20 @@ def get_mlb_schedule(days_ahead=1):
                     for game in date_info.get('games', []):
                         away_team = game['teams']['away']['team']['name']
                         home_team = game['teams']['home']['team']['name']
-                        game_datetime = game['gameDate']
+                        game_datetime_utc = game['gameDate']
                         venue_name = game['venue']['name']
                         
                         venue_location = get_venue_location(venue_name)
+                        venue_timezone = get_venue_timezone(venue_name)
                         
-                        game_dt = datetime.strptime(game_datetime, '%Y-%m-%dT%H:%M:%SZ')
+                        # Parse UTC time and convert to local venue time
+                        game_dt_utc = datetime.strptime(game_datetime_utc, '%Y-%m-%dT%H:%M:%SZ')
+                        game_dt_utc = pytz.utc.localize(game_dt_utc)
+                        game_dt_local = game_dt_utc.astimezone(pytz.timezone(venue_timezone))
                         
                         games.append({
-                            'date': game_dt.strftime('%Y-%m-%d'),
-                            'time': game_dt.strftime('%H:%M'),
+                            'date': game_dt_local.strftime('%Y-%m-%d'),
+                            'time': game_dt_local.strftime('%H:%M'),
                             'opponent': f"{away_team} vs {home_team}",
                             'location': venue_location
                         })
@@ -39,6 +44,57 @@ def get_mlb_schedule(days_ahead=1):
             continue
     
     return games
+
+def get_venue_timezone(venue_name):
+    """Map venue to timezone"""
+    arizona_venues = [
+        'Tempe Diablo Stadium', 'Camelback Ranch', 'Sloan Park',
+        'Salt River Fields', 'Peoria Sports Complex', 'Surprise Stadium',
+        'Goodyear Ballpark', 'Hohokam Stadium', 'American Family Fields of Phoenix'
+    ]
+    
+    florida_venues = [
+        'JetBlue Park', 'Ed Smith Stadium', 'LECOM Park', 'Charlotte Sports Park',
+        'Hammond Stadium', 'Roger Dean Chevrolet Stadium', 'Clover Park',
+        'The Ballpark of the Palm Beaches', 'Spectrum Field',
+        'George M. Steinbrenner Field', 'TD Ballpark'
+    ]
+    
+    eastern_venues = [
+        'Yankee Stadium', 'Citi Field', 'Citizens Bank Park', 'Nationals Park',
+        'Fenway Park', 'Oriole Park at Camden Yards', 'Tropicana Field',
+        'Truist Park', 'loanDepot park', 'PNC Park', 'Progressive Field',
+        'Comerica Park', 'Great American Ball Park'
+    ]
+    
+    central_venues = [
+        'Wrigley Field', 'Guaranteed Rate Field', 'Busch Stadium',
+        'American Family Field', 'Target Field', 'Kauffman Stadium',
+        'Minute Maid Park', 'Globe Life Field'
+    ]
+    
+    mountain_venues = ['Coors Field', 'Chase Field']
+    
+    pacific_venues = [
+        'Angel Stadium', 'Dodger Stadium', 'Oracle Park', 'Petco Park', 'T-Mobile Park'
+    ]
+    
+    if venue_name in arizona_venues:
+        return 'America/Phoenix'
+    elif venue_name in florida_venues:
+        return 'America/New_York'
+    elif venue_name in eastern_venues:
+        return 'America/New_York'
+    elif venue_name in central_venues:
+        return 'America/Chicago'
+    elif venue_name in mountain_venues:
+        return 'America/Denver'
+    elif venue_name in pacific_venues:
+        return 'America/Los_Angeles'
+    elif venue_name == 'Rogers Centre':
+        return 'America/Toronto'
+    else:
+        return 'America/New_York'
 
 def get_venue_location(venue_name):
     """Map venue names to locations for weather API"""
@@ -116,8 +172,6 @@ def update_config_file(games):
 
 def main():
     print("🔄 Fetching MLB schedule...")
-    
-    # Get next 24 hours of games only
     games = get_mlb_schedule(days_ahead=1)
     
     if games:
