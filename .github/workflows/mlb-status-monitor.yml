@@ -1,0 +1,49 @@
+name: MLB Game Status Monitor
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+jobs:
+  monitor-status:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies
+        run: pip install requests pytz
+      
+      - name: Check if game monitoring hours (10 AM - 10 PM PT)
+        id: check_time
+        run: |
+          HOUR=$(TZ='America/Los_Angeles' date +%H)
+          if [ "$HOUR" -ge "10" ] && [ "$HOUR" -le "22" ]; then
+            echo "should_run=true" >> $GITHUB_OUTPUT
+            echo "✅ Game hours ($HOUR:00 PT) - monitoring"
+          else
+            echo "should_run=false" >> $GITHUB_OUTPUT
+            echo "⏭️ Outside game hours ($HOUR:00 PT) - skipping"
+          fi
+      
+      - name: Monitor MLB game status
+        if: steps.check_time.outputs.should_run == 'true'
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: python mlb_game_status_monitor.py
+      
+      - name: Commit game state tracking
+        if: steps.check_time.outputs.should_run == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add game_states.json || true
+          git diff --quiet && git diff --staged --quiet || git commit -m "Update game states [skip ci]" || true
+          git push || true
