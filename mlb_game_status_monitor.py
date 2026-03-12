@@ -27,7 +27,7 @@ def save_game_states(states):
 
 def get_mlb_game_status(game_date):
     """Get all MLB games for a specific date with their status"""
-    url = f"https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={game_date}"
+    url = f"https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={game_date}&hydrate=linescore"
     
     try:
         response = requests.get(url)
@@ -47,9 +47,22 @@ def get_mlb_game_status(game_date):
                     abstract_state = status['abstractGameState']
                     reason = status.get('reason', '')
                     
+                    # Get score and inning if game has started
+                    linescore = game.get('linescore', {})
+                    away_score = game['teams']['away'].get('score', 0)
+                    home_score = game['teams']['home'].get('score', 0)
+                    current_inning = linescore.get('currentInning', None)
+                    inning_state = linescore.get('inningState', '')
+                    
                     games_status.append({
                         'game_pk': game_pk,
                         'matchup': f"{away_team} vs {home_team}",
+                        'away_team': away_team,
+                        'home_team': home_team,
+                        'away_score': away_score,
+                        'home_score': home_score,
+                        'inning': current_inning,
+                        'inning_state': inning_state,
                         'detailed_state': detailed_state,
                         'abstract_state': abstract_state,
                         'reason': reason
@@ -73,6 +86,35 @@ def is_weather_delay(game_status):
                  any(keyword in state for keyword in weather_keywords)
     
     return is_delayed and is_weather
+
+def format_score_inning(game_status):
+    """Format score and inning info"""
+    away = game_status['away_team']
+    home = game_status['home_team']
+    away_score = game_status['away_score']
+    home_score = game_status['home_score']
+    inning = game_status['inning']
+    inning_state = game_status['inning_state']
+    
+    # Build score line
+    score_text = f"{away} {away_score}, {home} {home_score}"
+    
+    # Add inning if game has started
+    if inning:
+        if inning_state == 'Middle':
+            inning_text = f"Middle {inning}"
+        elif inning_state == 'Top':
+            inning_text = f"Top {inning}"
+        elif inning_state == 'Bottom':
+            inning_text = f"Bottom {inning}"
+        elif inning_state == 'End':
+            inning_text = f"End of {inning}"
+        else:
+            inning_text = f"Inning {inning}"
+        
+        return score_text, inning_text
+    else:
+        return None, None
 
 def send_delay_alert(game_status, alert_type):
     """Send Slack alert for delay or resumption"""
@@ -123,6 +165,24 @@ def send_delay_alert(game_status, alert_type):
         ]
     }
     
+    # Add score and inning if available (for in-game delays)
+    score_text, inning_text = format_score_inning(game_status)
+    if score_text and alert_type in ["DELAY", "RESUME"]:
+        message["blocks"].append({
+            "type": "section",
+            "fields": [
+                {
+                    "type": "mrkdwn",
+                    "text": f"*Score:*\n{score_text}"
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": f"*Inning:*\n{inning_text}"
+                }
+            ]
+        })
+    
+    # Add reason if available
     if game_status['reason']:
         message["blocks"].append({
             "type": "section",
@@ -132,6 +192,7 @@ def send_delay_alert(game_status, alert_type):
             }
         })
     
+    # Add timestamp
     message["blocks"].append({
         "type": "context",
         "elements": [
