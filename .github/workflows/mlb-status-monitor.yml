@@ -36,7 +36,7 @@ jobs:
       - name: Monitor MLB game status
         if: steps.check_time.outputs.should_run == 'true'
         env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK: ${{ secrets.HIGH_RISK_WEBHOOK_URL }}
         run: python mlb_game_status_monitor.py
       
       - name: Commit game state tracking
