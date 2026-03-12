@@ -2,10 +2,8 @@ name: High Risk Weather Alerts
 
 on:
   schedule:
-    # Morning report at 7 AM PT (14:00 UTC) - always posts
-    - cron: '0 14 * * *'
-    # Live monitoring every 15 minutes during typical game hours (12pm-2am PT / 19:00-09:00 UTC)
-    - cron: '*/15 19-23,0-9 * * *'
+    # Runs every hour - time check ensures only posts at designated times
+    - cron: '0 * * * *'
   workflow_dispatch:
 
 jobs:
@@ -13,31 +11,34 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-
+      
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-
+      
       - name: Install dependencies
         run: pip install -r requirements.txt
-
-      - name: Update game schedule
-        run: python update_schedule.py
-
-      - name: Check if morning report
+      
+      - name: Check if it's an alert hour (7 AM, 10 AM, 1 PM, 4 PM, 7 PM PT)
         id: check_time
         run: |
-          current_hour=$(date -u +%H)
-          if [ "$current_hour" == "14" ]; then
-            echo "mode=daily" >> $GITHUB_OUTPUT
+          HOUR=$(TZ='America/Los_Angeles' date +%H)
+          if [ "$HOUR" = "07" ] || [ "$HOUR" = "10" ] || [ "$HOUR" = "13" ] || [ "$HOUR" = "16" ] || [ "$HOUR" = "19" ]; then
+            echo "should_run=true" >> $GITHUB_OUTPUT
+            echo "✅ Alert hour ($HOUR:00 PT) - proceeding"
           else
-            echo "mode=monitor" >> $GITHUB_OUTPUT
+            echo "should_run=false" >> $GITHUB_OUTPUT
+            echo "⏭️ Not an alert hour (currently $HOUR:00 PT) - skipping"
           fi
-
+      
+      - name: Update game schedule
+        if: steps.check_time.outputs.should_run == 'true'
+        run: python update_schedule.py
+      
       - name: Send high-risk alerts
+        if: steps.check_time.outputs.should_run == 'true'
         env:
           SLACK_WEBHOOK: ${{ secrets.HIGH_RISK_WEBHOOK_URL }}
           WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
-          ALERT_MODE: ${{ steps.check_time.outputs.mode }}
         run: python high_risk_alert.py
