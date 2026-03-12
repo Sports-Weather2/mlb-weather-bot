@@ -2,7 +2,6 @@ name: High Risk Weather Alerts
 
 on:
   schedule:
-    # Runs every hour - time check ensures only posts at designated times
     - cron: '0 * * * *'
   workflow_dispatch:
 
@@ -20,16 +19,16 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
       
-      - name: Check if it's an alert hour (7 AM, 10 AM, 1 PM, 4 PM, 7 PM PT)
+      - name: Check if it's 10 AM Pacific Time
         id: check_time
         run: |
           HOUR=$(TZ='America/Los_Angeles' date +%H)
-          if [ "$HOUR" = "07" ] || [ "$HOUR" = "10" ] || [ "$HOUR" = "13" ] || [ "$HOUR" = "16" ] || [ "$HOUR" = "19" ]; then
+          if [ "$HOUR" = "10" ]; then
             echo "should_run=true" >> $GITHUB_OUTPUT
-            echo "✅ Alert hour ($HOUR:00 PT) - proceeding"
+            echo "✅ It's 10 AM PT - proceeding"
           else
             echo "should_run=false" >> $GITHUB_OUTPUT
-            echo "⏭️ Not an alert hour (currently $HOUR:00 PT) - skipping"
+            echo "⏭️ Not 10 AM PT (currently $HOUR:00) - skipping"
           fi
       
       - name: Update game schedule
