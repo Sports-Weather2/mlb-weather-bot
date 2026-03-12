@@ -62,12 +62,10 @@ def is_high_risk(weather):
 
 def build_high_risk_message(high_risk_games):
     """Build Slack message for high-risk games only"""
-    # Get current time in Pacific timezone
     pacific_tz = pytz.timezone('America/Los_Angeles')
     now = datetime.now(pacific_tz)
     
     if not high_risk_games:
-        # No high-risk games - send all clear message
         return {
             "text": "✅ No high-risk weather games",
             "blocks": [
@@ -91,14 +89,13 @@ def build_high_risk_message(high_risk_games):
                     "elements": [
                         {
                             "type": "mrkdwn",
-                            "text": f"Checked at {now.strftime('%I:%M %p')} PT | Next check: {(now + timedelta(hours=3)).strftime('%I:%M %p')} PT"
+                            "text": f"Checked at {now.strftime('%I:%M %p')} PT"
                         }
                     ]
                 }
             ]
         }
     
-    # High-risk games exist - build alert
     message = {
         "text": f"🚨 {len(high_risk_games)} HIGH RISK weather game(s)",
         "blocks": [
@@ -122,7 +119,7 @@ def build_high_risk_message(high_risk_games):
                 "elements": [
                     {
                         "type": "mrkdwn",
-                        "text": f"Updated: {now.strftime('%I:%M %p')} PT | Next check: {(now + timedelta(hours=3)).strftime('%I:%M %p')} PT"
+                        "text": f"Updated: {now.strftime('%I:%M %p')} PT"
                     }
                 ]
             },
@@ -132,7 +129,6 @@ def build_high_risk_message(high_risk_games):
         ]
     }
     
-    # Add each high-risk game
     for game_data in high_risk_games:
         game = game_data['game']
         weather = game_data['weather']
@@ -162,7 +158,6 @@ def build_high_risk_message(high_risk_games):
         message["blocks"].append(game_block)
         message["blocks"].append({"type": "divider"})
     
-    # Add footer with legend
     message["blocks"].append({
         "type": "context",
         "elements": [
@@ -193,13 +188,20 @@ def main():
     now = datetime.now(pacific_tz)
     high_risk_games = []
     
+    # Check if any games exist at all
+    if not games:
+        print("ℹ️  No MLB games scheduled - skipping alert")
+        return
+    
     print(f"🔍 Checking for high-risk weather games...")
     
+    # Check if any games are in the next 48 hours
+    upcoming_count = 0
     for game in games:
         game_datetime = datetime.strptime(f"{game['date']} {game['time']}", "%Y-%m-%d %H:%M")
         
-        # Check games within next 48 hours
         if now.replace(tzinfo=None) <= game_datetime <= now.replace(tzinfo=None) + timedelta(hours=48):
+            upcoming_count += 1
             weather = get_weather_forecast(game['location'], game_datetime)
             
             if is_high_risk(weather):
@@ -209,9 +211,14 @@ def main():
                 })
                 print(f"  🔴 HIGH RISK: {game['opponent']} - {game['date']} {game['time']}")
     
-    print(f"\n📊 Found {len(high_risk_games)} high-risk game(s)")
+    # If no upcoming games at all, skip posting
+    if upcoming_count == 0:
+        print("ℹ️  No games in next 48 hours - skipping alert (off-day)")
+        return
     
-    # Always build and post message (either alerts or all-clear)
+    print(f"\n📊 Found {len(high_risk_games)} high-risk game(s) out of {upcoming_count} total")
+    
+    # Post message (either high-risk alerts or all-clear)
     message = build_high_risk_message(high_risk_games)
     
     if post_to_slack(message):
