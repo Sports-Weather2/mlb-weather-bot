@@ -2,9 +2,9 @@ name: Rain Delay Monitor
 
 on:
   schedule:
-    # Every 10 minutes from 10 AM to Midnight PT
-    - cron: '*/10 17-23 * * *'  # 10AM-4PM PT (every 10 min)
-    - cron: '*/10 0-7 * * *'    # 4PM-Midnight PT (every 10 min, extended)
+    # Every 10 minutes from 10 AM to 10 PM PT only
+    - cron: '*/10 17-23 * * *'  # 10AM-4PM PT
+    - cron: '*/10 0-5 * * *'    # 4PM-10PM PT (stops at 10 PM)
   workflow_dispatch:
 
 jobs:
@@ -19,7 +19,7 @@ jobs:
           python-version: '3.10'
       
       - name: Install dependencies
-        run: pip install requests
+        run: pip install requests pytz
       
       - name: Monitor for delays
         env:
