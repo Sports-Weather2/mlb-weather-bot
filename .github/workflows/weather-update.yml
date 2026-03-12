@@ -2,7 +2,8 @@ name: Daily Weather Report
 
 on:
   schedule:
-    - cron: '0 14,15 * * *'
+    # Runs every hour - time check ensures it only posts at 7 AM PT
+    - cron: '0 * * * *'
   workflow_dispatch:
 
 jobs:
@@ -28,7 +29,7 @@ jobs:
             echo "✅ It's 7 AM PT - proceeding"
           else
             echo "should_run=false" >> $GITHUB_OUTPUT
-            echo "⏭️ Not 7 AM PT - skipping"
+            echo "⏭️ Not 7 AM PT (currently $HOUR:00) - skipping"
           fi
       
       - name: Update game schedule
