@@ -144,7 +144,6 @@ def format_game_block(game, weather, impact):
     return blocks
 
 def build_slack_message(games_weather):
-    # Get current time in Pacific timezone
     pacific_tz = pytz.timezone('America/Los_Angeles')
     now = datetime.now(pacific_tz)
     
@@ -232,6 +231,12 @@ def post_to_slack(message):
 
 def main():
     games = load_games()
+    
+    # Skip if no games scheduled at all (off-day)
+    if not games:
+        print("ℹ️  No MLB games scheduled - skipping report (off-day)")
+        return
+    
     pacific_tz = pytz.timezone('America/Los_Angeles')
     now = datetime.now(pacific_tz)
     upcoming_games = []
@@ -258,8 +263,9 @@ def main():
             
             print(f"     {impact['emoji']} {impact['status']}")
     
+    # If no games in next 48 hours, skip (off-day)
     if not upcoming_games:
-        print("ℹ️  No games in next 48 hours - skipping update")
+        print("ℹ️  No games in next 48 hours - skipping report (off-day)")
         return
     
     # Sort games by risk level: HIGH_RISK first, MONITOR second, CLEAR last
