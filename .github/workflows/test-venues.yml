@@ -1,0 +1,23 @@
+name: Test Venue Locations
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-venues:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install dependencies
+        run: pip install requests
+      
+      - name: Test all venue locations
+        env:
+          WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
+        run: python test_venues.py
