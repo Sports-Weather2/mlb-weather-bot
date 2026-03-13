@@ -36,6 +36,9 @@ def get_weather_forecast(location, game_datetime):
     response = requests.get(WEATHER_BASE_URL, params=params)
     data = response.json()
     
+    if 'list' not in data:
+        raise ValueError(f"No forecast data for {location}")
+    
     forecasts = data['list']
     game_timestamp = int(game_datetime.timestamp())
     
@@ -114,7 +117,7 @@ def format_game_block(game, weather, impact):
             "type": "section",
             "text": {
                 "type": "mrkdwn",
-                "text": f"*⚾ {game['opponent']}*\n{date_str} at {time_str}"
+                "text": f"*⚾ {game['opponent']}*\n{date_str} at {time_str} PT"
             }
         },
         {
@@ -244,24 +247,36 @@ def main():
     print(f"🔍 Checking weather for games...")
     
     for game in games:
-        game_datetime = datetime.strptime(
-            f"{game['date']} {game['time']}", 
-            "%Y-%m-%d %H:%M"
-        )
-        
-        if now.replace(tzinfo=None) <= game_datetime <= now.replace(tzinfo=None) + timedelta(hours=48):
-            print(f"  📅 {game['opponent']} - {game['date']} {game['time']}")
+        try:
+            game_datetime = datetime.strptime(
+                f"{game['date']} {game['time']}", 
+                "%Y-%m-%d %H:%M"
+            )
             
-            weather = get_weather_forecast(game['location'], game_datetime)
-            impact = calculate_game_impact(weather)
-            
-            upcoming_games.append({
-                'game': game,
-                'weather': weather,
-                'impact': impact
-            })
-            
-            print(f"     {impact['emoji']} {impact['status']}")
+            if now.replace(tzinfo=None) <= game_datetime <= now.replace(tzinfo=None) + timedelta(hours=48):
+                print(f"  📅 {game['opponent']} - {game['date']} {game['time']}")
+                
+                # Try to get weather with error handling
+                try:
+                    weather = get_weather_forecast(game['location'], game_datetime)
+                    impact = calculate_game_impact(weather)
+                    
+                    upcoming_games.append({
+                        'game': game,
+                        'weather': weather,
+                        'impact': impact
+                    })
+                    
+                    print(f"     {impact['emoji']} {impact['status']}")
+                    
+                except Exception as weather_error:
+                    print(f"     ❌ Error fetching weather for {game['location']}: {weather_error}")
+                    print(f"     ⏭️  Skipping this game and continuing...")
+                    continue
+                    
+        except Exception as game_error:
+            print(f"  ❌ Error processing game {game.get('opponent', 'Unknown')}: {game_error}")
+            continue
     
     # If no games in next 48 hours, skip (off-day)
     if not upcoming_games:
@@ -279,20 +294,24 @@ def main():
         print(f"⚠️ Limiting to top 10 games (total available: {len(upcoming_games)})")
         upcoming_games = upcoming_games[:10]
     
-    message = build_slack_message(upcoming_games)
-    
-    if post_to_slack(message):
-        print(f"\n✅ Weather impact report posted for {len(upcoming_games)} game(s)")
+    # Only post if we have at least 1 game with successful weather data
+    if upcoming_games:
+        message = build_slack_message(upcoming_games)
         
-        high_risk = sum(1 for g in upcoming_games if g['impact']['level'] == 'HIGH_RISK')
-        monitor = sum(1 for g in upcoming_games if g['impact']['level'] == 'MONITOR')
-        clear = sum(1 for g in upcoming_games if g['impact']['level'] == 'CLEAR')
-        
-        print(f"   🔴 High Risk: {high_risk}")
-        print(f"   🟡 Monitor: {monitor}")
-        print(f"   🟢 Clear: {clear}")
+        if post_to_slack(message):
+            print(f"\n✅ Weather impact report posted for {len(upcoming_games)} game(s)")
+            
+            high_risk = sum(1 for g in upcoming_games if g['impact']['level'] == 'HIGH_RISK')
+            monitor = sum(1 for g in upcoming_games if g['impact']['level'] == 'MONITOR')
+            clear = sum(1 for g in upcoming_games if g['impact']['level'] == 'CLEAR')
+            
+            print(f"   🔴 High Risk: {high_risk}")
+            print(f"   🟡 Monitor: {monitor}")
+            print(f"   🟢 Clear: {clear}")
+        else:
+            print("❌ Failed to post to Slack")
     else:
-        print("❌ Failed to post to Slack")
+        print("⚠️ No games with successful weather data - skipping report")
 
 if __name__ == "__main__":
     main()
