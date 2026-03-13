@@ -109,7 +109,7 @@ def main():
         'Nationals Park': '20003,US',
         'Fenway Park': '02215,US',
         'Oriole Park at Camden Yards': '21201,US',
-        'Rogers Centre': 'M5V1J1,CA',
+        'Rogers Centre': 'Toronto,CA',
         'Tropicana Field': '33705,US',
         'Truist Park': '30339,US',
         'loanDepot park': '33125,US',
