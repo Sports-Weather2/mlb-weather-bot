@@ -30,7 +30,7 @@ def get_mlb_schedule(days_ahead=1):
                         
                         venue_location = get_venue_location(venue_name)
                         
-                        # Parse UTC time and convert to PACIFIC time (not local venue time)
+                        # Parse UTC time and convert to PACIFIC time
                         game_dt_utc = datetime.strptime(game_datetime_utc, '%Y-%m-%dT%H:%M:%SZ')
                         game_dt_utc = pytz.utc.localize(game_dt_utc)
                         game_dt_pacific = game_dt_utc.astimezone(pacific_tz)
@@ -65,7 +65,7 @@ def get_venue_location(venue_name):
         'Charlotte Sports Park': 'Port Charlotte,US',
         'Hammond Stadium': 'Fort Myers,US',
         'Roger Dean Chevrolet Stadium': 'Jupiter,US',
-        'Clover Park': 'Port St Lucie,US',
+        'Clover Park': 'Port Saint Lucie,FL,US',
         'The Ballpark of the Palm Beaches': 'West Palm Beach,US',
         'Spectrum Field': 'Clearwater,US',
         'George M. Steinbrenner Field': 'Tampa,US',
