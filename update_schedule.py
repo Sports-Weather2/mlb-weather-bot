@@ -65,7 +65,7 @@ def get_venue_location(venue_name):
         'Charlotte Sports Park': 'Port Charlotte,US',
         'Hammond Stadium': 'Fort Myers,US',
         'Roger Dean Chevrolet Stadium': 'Jupiter,US',
-        'Clover Park': 'Port Saint Lucie,FL,US',
+        'Clover Park': 'West Palm Beach,US',
         'The Ballpark of the Palm Beaches': 'West Palm Beach,US',
         'Spectrum Field': 'Clearwater,US',
         'George M. Steinbrenner Field': 'Tampa,US',
