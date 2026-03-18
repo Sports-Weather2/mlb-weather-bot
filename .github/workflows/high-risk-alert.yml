@@ -36,13 +36,11 @@ jobs:
           fi
       
       - name: Update game schedule
-        # TEMPORARILY DISABLED FOR TESTING - Will re-enable after test
-        # if: steps.check_time.outputs.should_run == 'true'
+        if: steps.check_time.outputs.should_run == 'true'
         run: python update_schedule.py
       
       - name: Send High-risk alerts
-        # TEMPORARILY DISABLED FOR TESTING - Will re-enable after test
-        # if: steps.check_time.outputs.should_run == 'true'
+        if: steps.check_time.outputs.should_run == 'true'
         env:
           SLACK_WEBHOOK: ${{ secrets.HIGH_RISK_WEBHOOK_URL }}
           WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
