@@ -1,0 +1,151 @@
+# MLB Weather Bot - Git Ignore File
+# Prevents sensitive data and unnecessary files from being committed
+
+# ============================================
+# Secrets and Environment Variables
+# ============================================
+.env
+*.env
+.env.local
+.env.production
+secrets.json
+config.local.json
+
+# API Keys (just in case)
+*_api_key.txt
+*_token.txt
+*_secret.txt
+
+# ============================================
+# Python
+# ============================================
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Distribution / packaging
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.pytest_cache/
+
+# ============================================
+# IDE / Editor Files
+# ============================================
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iml
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+
+# ============================================
+# Operating System Files
+# ============================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+# ============================================
+# Logs and Temporary Files
+# ============================================
+*.log
+logs/
+*.tmp
+temp/
+tmp/
+*.bak
+*.backup
+
+# ============================================
+# Project Specific
+# ============================================
+# Local testing files
+test_output/
+sandbox/
+scratch/
+
+# Generated data files (keep config.json and game_states.json tracked)
+# If you want to ignore generated files, add them here
+
+# Old/backup files
+*.old
+backup/
+
+# ============================================
+# GitHub Actions (local testing)
+# ============================================
+.github/workflows/*.local.yml
+
+# ============================================
+# Notes
+# ============================================
+# Keep these files tracked (DON'T ignore):
+# - config.json (game schedule)
+# - game_states.json (state tracking)
+# - requirements.txt (dependencies)
+# - All .py files (your code)
+# - All .yml workflow files
