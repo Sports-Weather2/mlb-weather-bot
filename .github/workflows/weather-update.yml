@@ -2,8 +2,11 @@ name: Daily Weather Report
 
 on:
   schedule:
-    # Runs every hour - time check ensures it only posts at 7 AM PT
-    - cron: '0 * * * *'
+    # Runs at both 14:00 UTC and 15:00 UTC - whichever matches 7 AM PT will execute
+    # During PDT (Mar-Nov): 14:00 UTC = 7 AM PT ✅
+    # During PST (Nov-Mar): 15:00 UTC = 7 AM PT ✅
+    - cron: '0 14 * * *'
+    - cron: '0 15 * * *'
   workflow_dispatch:
 
 jobs:
@@ -24,12 +27,12 @@ jobs:
         id: check_time
         run: |
           HOUR=$(TZ='America/Los_Angeles' date +%H)
+          echo "should_run=false" >> $GITHUB_OUTPUT
           if [ "$HOUR" -eq "07" ]; then
             echo "should_run=true" >> $GITHUB_OUTPUT
             echo "✅ It's 7 AM PT - proceeding"
           else
-            echo "should_run=false" >> $GITHUB_OUTPUT
-            echo "⏭️ Not 7 AM PT (currently $HOUR:00) - skipping"
+            echo "📅 Not 7 AM PT (currently $HOUR:00) - skipping"
           fi
       
       - name: Update game schedule
@@ -39,6 +42,6 @@ jobs:
       - name: Run weather bot
         if: steps.check_time.outputs.should_run == 'true'
         env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
         run: python weather_bot.py
