@@ -4,7 +4,7 @@ import requests
 import pytz
 from datetime import datetime, timedelta
 
-SLACK_WEBHOOK = os.environ.get('SLACK_WEBHOOK')
+SLACK_WEBHOOK = os.environ.get('SLACK_WEBHOOK_URL')
 WEATHER_API_KEY = os.environ.get('WEATHER_API_KEY')
 WEATHER_BASE_URL = "https://api.openweathermap.org/data/2.5/forecast"
 
