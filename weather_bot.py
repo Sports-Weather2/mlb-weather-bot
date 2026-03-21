@@ -3,6 +3,7 @@ import json
 import requests
 import pytz
 from datetime import datetime, timedelta
+from analytics import log_alert, log_games_monitored, log_workflow_run
 
 SLACK_WEBHOOK = os.environ.get('SLACK_WEBHOOK_URL')
 WEATHER_API_KEY = os.environ.get('WEATHER_API_KEY')
@@ -233,85 +234,100 @@ def post_to_slack(message):
     return response.status_code == 200
 
 def main():
-    games = load_games()
-    
-    # Skip if no games scheduled at all (off-day)
-    if not games:
-        print("ℹ️  No MLB games scheduled - skipping report (off-day)")
-        return
-    
-    pacific_tz = pytz.timezone('America/Los_Angeles')
-    now = datetime.now(pacific_tz)
-    upcoming_games = []
-    
-    print(f"🔍 Checking weather for games...")
-    
-    for game in games:
-        try:
-            game_datetime = datetime.strptime(
-                f"{game['date']} {game['time']}", 
-                "%Y-%m-%d %H:%M"
-            )
-            
-            if now.replace(tzinfo=None) <= game_datetime <= now.replace(tzinfo=None) + timedelta(hours=48):
-                print(f"  📅 {game['opponent']} - {game['date']} {game['time']}")
-                
-                # Try to get weather with error handling
-                try:
-                    weather = get_weather_forecast(game['location'], game_datetime)
-                    impact = calculate_game_impact(weather)
-                    
-                    upcoming_games.append({
-                        'game': game,
-                        'weather': weather,
-                        'impact': impact
-                    })
-                    
-                    print(f"     {impact['emoji']} {impact['status']}")
-                    
-                except Exception as weather_error:
-                    print(f"     ❌ Error fetching weather for {game['location']}: {weather_error}")
-                    print(f"     ⏭️  Skipping this game and continuing...")
-                    continue
-                    
-        except Exception as game_error:
-            print(f"  ❌ Error processing game {game.get('opponent', 'Unknown')}: {game_error}")
-            continue
-    
-    # If no games in next 48 hours, skip (off-day)
-    if not upcoming_games:
-        print("ℹ️  No games in next 48 hours - skipping report (off-day)")
-        return
-    
-    # Sort games by risk level: HIGH_RISK first, MONITOR second, CLEAR last
-    risk_priority = {'HIGH_RISK': 0, 'MONITOR': 1, 'CLEAR': 2}
-    upcoming_games.sort(key=lambda x: risk_priority[x['impact']['level']])
-    
-    print(f"\n📊 Games sorted by risk level (HIGH_RISK → MONITOR → CLEAR)")
-    
-    # Limit to 10 games to stay under Slack's 50-block limit
-    if len(upcoming_games) > 10:
-        print(f"⚠️ Limiting to top 10 games (total available: {len(upcoming_games)})")
-        upcoming_games = upcoming_games[:10]
-    
-    # Only post if we have at least 1 game with successful weather data
-    if upcoming_games:
-        message = build_slack_message(upcoming_games)
+    try:
+        games = load_games()
         
-        if post_to_slack(message):
-            print(f"\n✅ Weather impact report posted for {len(upcoming_games)} game(s)")
+        # Skip if no games scheduled at all (off-day)
+        if not games:
+            print("ℹ️  No MLB games scheduled - skipping report (off-day)")
+            log_workflow_run('skipped')
+            return
+        
+        pacific_tz = pytz.timezone('America/Los_Angeles')
+        now = datetime.now(pacific_tz)
+        upcoming_games = []
+        
+        print(f"🔍 Checking weather for games...")
+        
+        for game in games:
+            try:
+                game_datetime = datetime.strptime(
+                    f"{game['date']} {game['time']}", 
+                    "%Y-%m-%d %H:%M"
+                )
+                
+                if now.replace(tzinfo=None) <= game_datetime <= now.replace(tzinfo=None) + timedelta(hours=48):
+                    print(f"  📅 {game['opponent']} - {game['date']} {game['time']}")
+                    
+                    # Try to get weather with error handling
+                    try:
+                        weather = get_weather_forecast(game['location'], game_datetime)
+                        impact = calculate_game_impact(weather)
+                        
+                        upcoming_games.append({
+                            'game': game,
+                            'weather': weather,
+                            'impact': impact
+                        })
+                        
+                        print(f"     {impact['emoji']} {impact['status']}")
+                        
+                    except Exception as weather_error:
+                        print(f"     ❌ Error fetching weather for {game['location']}: {weather_error}")
+                        print(f"     ⏭️  Skipping this game and continuing...")
+                        continue
+                        
+            except Exception as game_error:
+                print(f"  ❌ Error processing game {game.get('opponent', 'Unknown')}: {game_error}")
+                continue
+        
+        # If no games in next 48 hours, skip (off-day)
+        if not upcoming_games:
+            print("ℹ️  No games in next 48 hours - skipping report (off-day)")
+            log_workflow_run('skipped')
+            return
+        
+        # Sort games by risk level: HIGH_RISK first, MONITOR second, CLEAR last
+        risk_priority = {'HIGH_RISK': 0, 'MONITOR': 1, 'CLEAR': 2}
+        upcoming_games.sort(key=lambda x: risk_priority[x['impact']['level']])
+        
+        print(f"\n📊 Games sorted by risk level (HIGH_RISK → MONITOR → CLEAR)")
+        
+        # Limit to 10 games to stay under Slack's 50-block limit
+        if len(upcoming_games) > 10:
+            print(f"⚠️ Limiting to top 10 games (total available: {len(upcoming_games)})")
+            upcoming_games = upcoming_games[:10]
+        
+        # Only post if we have at least 1 game with successful weather data
+        if upcoming_games:
+            message = build_slack_message(upcoming_games)
             
-            high_risk = sum(1 for g in upcoming_games if g['impact']['level'] == 'HIGH_RISK')
-            monitor = sum(1 for g in upcoming_games if g['impact']['level'] == 'MONITOR')
-            clear = sum(1 for g in upcoming_games if g['impact']['level'] == 'CLEAR')
-            
-            print(f"   🔴 High Risk: {high_risk}")
-            print(f"   🟡 Monitor: {monitor}")
-            print(f"   🟢 Clear: {clear}")
+            if post_to_slack(message):
+                print(f"\n✅ Weather impact report posted for {len(upcoming_games)} game(s)")
+                
+                high_risk = sum(1 for g in upcoming_games if g['impact']['level'] == 'HIGH_RISK')
+                monitor = sum(1 for g in upcoming_games if g['impact']['level'] == 'MONITOR')
+                clear = sum(1 for g in upcoming_games if g['impact']['level'] == 'CLEAR')
+                
+                print(f"   🔴 High Risk: {high_risk}")
+                print(f"   🟡 Monitor: {monitor}")
+                print(f"   🟢 Clear: {clear}")
+                
+                # ✅ LOG ANALYTICS - Daily report sent
+                log_alert('daily_report')
+                log_games_monitored(len(upcoming_games))
+                log_workflow_run('success')
+            else:
+                print("❌ Failed to post to Slack")
+                log_workflow_run('failed')
         else:
-            print("❌ Failed to post to Slack")
-    else:
-        print("⚠️ No games with successful weather data - skipping report")
+            print("⚠️ No games with successful weather data - skipping report")
+            log_workflow_run('skipped')
+            
+    except Exception as e:
+        print(f"❌ Fatal error in weather bot: {e}")
+        log_workflow_run('failed')
+        raise
 
 if __name__ == "__main__":
     main()
