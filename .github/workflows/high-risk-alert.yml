@@ -3,8 +3,8 @@ name: High Risk Weather Alerts
 
 on:
   schedule:
-    - cron: '0 17 * * *'
-    - cron: '0 18 * * *'
+    - cron: '0 17 * * *'  # 10 AM PT during DST (Mar-Nov)
+    # Second cron removed to prevent duplicate posts
   workflow_dispatch:
 
 jobs:
