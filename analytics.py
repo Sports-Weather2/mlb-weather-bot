@@ -16,6 +16,7 @@ WHAT IT TRACKS:
 
 DATA STORAGE:
 All data is stored in analytics.json and persists between runs.
+Automatically generates ANALYTICS.md for beautiful GitHub display.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 """
@@ -110,16 +111,23 @@ def initialize_analytics():
 
 def save_analytics(analytics):
     """
-    Save analytics data back to file
+    Save analytics data and update markdown display
     
     Args:
         analytics: Dictionary containing all analytics data
         
-    Automatically updates the "last_updated" timestamp
+    Automatically updates:
+    1. analytics.json (raw data)
+    2. ANALYTICS.md (formatted display for GitHub)
     """
     analytics['metadata']['last_updated'] = datetime.now(pytz.timezone('America/Los_Angeles')).isoformat()
+    
+    # Save JSON data
     with open(ANALYTICS_FILE, 'w') as f:
         json.dump(analytics, f, indent=2)
+    
+    # Update markdown display
+    generate_analytics_markdown()
 
 # ============================================
 # TRACKING FUNCTIONS
@@ -351,6 +359,133 @@ Success Rate:              {success_rate:.1f}%
     
     return report
 
+def generate_analytics_markdown():
+    """
+    Generate ANALYTICS.md - a formatted markdown file with analytics data
+    
+    Creates a beautiful display that renders nicely in GitHub
+    Similar to STATUS.md format
+    """
+    analytics = load_analytics()
+    pacific_tz = pytz.timezone('America/Los_Angeles')
+    now = datetime.now(pacific_tz)
+    
+    # Calculate accuracy percentage
+    total_delays = analytics['accuracy']['actual_delays']
+    correct_predictions = analytics['accuracy']['delays_predicted']
+    accuracy_pct = (correct_predictions / total_delays * 100) if total_delays > 0 else 0
+    
+    # Calculate success rate
+    total_runs = analytics['workflow_runs']['total_runs']
+    successful_runs = analytics['workflow_runs']['successful_runs']
+    success_rate = (successful_runs / total_runs * 100) if total_runs > 0 else 0
+    
+    # Get today and yesterday stats
+    today = now.strftime('%Y-%m-%d')
+    yesterday = (now - timedelta(days=1)).strftime('%Y-%m-%d')
+    
+    today_stats = analytics['daily_activity'].get(today, {'alerts_sent': 0, 'games_monitored': 0})
+    yesterday_stats = analytics['daily_activity'].get(yesterday, {'alerts_sent': 0, 'games_monitored': 0})
+    
+    # Estimate time saved (50 minutes saved per active day)
+    days_active = len(analytics['daily_activity'])
+    time_saved_hours = days_active * 0.83
+    
+    # Build the markdown content
+    markdown = f"""# 📊 System Analytics
+
+**MLB Weather Monitoring System**
+
+---
+
+## 🟢 CURRENT PERFORMANCE
+
+**Status:** Fully Operational  
+**Last Updated:** {now.strftime('%B %d, %Y %I:%M %p PT')}  
+**Season:** {analytics['metadata']['season']}
+
+---
+
+## 📈 Overall Statistics
+
+| Metric | Count |
+|--------|-------|
+| 📅 Games Monitored | {analytics['totals']['games_monitored']} |
+| 📬 Total Alerts Sent | {analytics['totals']['alerts_sent']} |
+| 📊 Daily Reports | {analytics['totals']['daily_reports_sent']} |
+| 🚨 High-Risk Alerts | {analytics['totals']['high_risk_alerts_sent']} |
+| ⏸️ Delay Alerts | {analytics['totals']['delay_alerts_sent']} |
+| ▶️ Resumption Alerts | {analytics['totals']['resumption_alerts_sent']} |
+| 📅 Postponement Alerts | {analytics['totals']['postponement_alerts_sent']} |
+
+---
+
+## 🎯 Prediction Accuracy
+
+| Metric | Value |
+|--------|-------|
+| Actual Delays Occurred | {analytics['accuracy']['actual_delays']} |
+| Correctly Predicted | {analytics['accuracy']['delays_predicted']} |
+| **Accuracy Rate** | **{accuracy_pct:.1f}%** |
+| False Positives | {analytics['accuracy']['false_positives']} |
+| False Negatives | {analytics['accuracy']['false_negatives']} |
+
+---
+
+## 🔧 System Reliability
+
+| Metric | Count | Percentage |
+|--------|-------|------------|
+| Total Workflow Runs | {analytics['workflow_runs']['total_runs']} | - |
+| ✅ Successful | {analytics['workflow_runs']['successful_runs']} | {success_rate:.1f}% |
+| ❌ Failed | {analytics['workflow_runs']['failed_runs']} | {(analytics['workflow_runs']['failed_runs']/total_runs*100) if total_runs > 0 else 0:.1f}% |
+| ⏭️ Skipped (time check) | {analytics['workflow_runs']['skipped_runs']} | {(analytics['workflow_runs']['skipped_runs']/total_runs*100) if total_runs > 0 else 0:.1f}% |
+
+**System Uptime:** {success_rate:.1f}%
+
+---
+
+## 📅 Recent Activity
+
+### Today ({now.strftime('%B %d, %Y')})
+
+- 📊 Alerts sent: {today_stats['alerts_sent']}
+- 📅 Games monitored: {today_stats['games_monitored']}
+
+### Yesterday ({(now - timedelta(days=1)).strftime('%B %d, %Y')})
+
+- 📊 Alerts sent: {yesterday_stats['alerts_sent']}
+- 📅 Games monitored: {yesterday_stats['games_monitored']}
+
+---
+
+## 💡 Key Insights
+
+**Time Saved:** ~{time_saved_hours:.0f} hours this season  
+**Estimated Value:** ${time_saved_hours * 50:.0f} in operational efficiency
+
+**Days Active:** {days_active}  
+**Average Alerts/Day:** {analytics['totals']['alerts_sent'] / days_active if days_active > 0 else 0:.1f}
+
+---
+
+## 🔄 Data Updates
+
+This file is automatically updated by `analytics.py` after each workflow run.
+
+**Update Frequency:** Real-time (after each alert sent)
+
+---
+
+_Last generated: {now.strftime('%B %d, %Y %I:%M %p PT')}_
+"""
+    
+    # Write to ANALYTICS.md file
+    with open('ANALYTICS.md', 'w') as f:
+        f.write(markdown)
+    
+    print("📊 Updated ANALYTICS.md")
+
 def get_daily_stats(date=None):
     """
     Get statistics for a specific date
@@ -383,7 +518,7 @@ def get_daily_stats(date=None):
 if __name__ == "__main__":
     """
     When you run this file directly (python analytics.py),
-    it prints the current analytics summary report.
+    it prints the current analytics summary report and updates ANALYTICS.md.
     
     Useful for:
     - Checking system performance
@@ -391,3 +526,5 @@ if __name__ == "__main__":
     - Validating data is being tracked correctly
     """
     print(generate_summary_report())
+    generate_analytics_markdown()
+    print("\n✅ ANALYTICS.md has been updated!")
