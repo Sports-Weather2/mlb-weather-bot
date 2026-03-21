@@ -3,6 +3,7 @@ import json
 import requests
 import pytz
 from datetime import datetime, timedelta
+from analytics import log_alert, log_workflow_run
 
 SLACK_WEBHOOK = os.environ.get('SLACK_WEBHOOK')
 WEATHER_API_KEY = os.environ.get('WEATHER_API_KEY')
@@ -183,51 +184,66 @@ def post_to_slack(message):
     return response.status_code == 200
 
 def main():
-    games = load_games()
-    pacific_tz = pytz.timezone('America/Los_Angeles')
-    now = datetime.now(pacific_tz)
-    high_risk_games = []
-    
-    # Check if any games exist at all
-    if not games:
-        print("ℹ️  No MLB games scheduled - skipping alert")
-        return
-    
-    print(f"🔍 Checking for high-risk weather games...")
-    
-    # Check if any games are in the next 48 hours
-    upcoming_count = 0
-    for game in games:
-        game_datetime = datetime.strptime(f"{game['date']} {game['time']}", "%Y-%m-%d %H:%M")
+    try:
+        games = load_games()
+        pacific_tz = pytz.timezone('America/Los_Angeles')
+        now = datetime.now(pacific_tz)
+        high_risk_games = []
         
-        if now.replace(tzinfo=None) <= game_datetime <= now.replace(tzinfo=None) + timedelta(hours=48):
-            upcoming_count += 1
-            weather = get_weather_forecast(game['location'], game_datetime)
+        # Check if any games exist at all
+        if not games:
+            print("ℹ️  No MLB games scheduled - skipping alert")
+            log_workflow_run('skipped')
+            return
+        
+        print(f"🔍 Checking for high-risk weather games...")
+        
+        # Check if any games are in the next 48 hours
+        upcoming_count = 0
+        for game in games:
+            game_datetime = datetime.strptime(f"{game['date']} {game['time']}", "%Y-%m-%d %H:%M")
             
-            if is_high_risk(weather):
-                high_risk_games.append({
-                    'game': game,
-                    'weather': weather
-                })
-                print(f"  🔴 HIGH RISK: {game['opponent']} - {game['date']} {game['time']}")
-    
-    # If no upcoming games at all, skip posting
-    if upcoming_count == 0:
-        print("ℹ️  No games in next 48 hours - skipping alert (off-day)")
-        return
-    
-    print(f"\n📊 Found {len(high_risk_games)} high-risk game(s) out of {upcoming_count} total")
-    
-    # Post message (either high-risk alerts or all-clear)
-    message = build_high_risk_message(high_risk_games)
-    
-    if post_to_slack(message):
-        if high_risk_games:
-            print(f"✅ High-risk alert posted for {len(high_risk_games)} game(s)")
+            if now.replace(tzinfo=None) <= game_datetime <= now.replace(tzinfo=None) + timedelta(hours=48):
+                upcoming_count += 1
+                weather = get_weather_forecast(game['location'], game_datetime)
+                
+                if is_high_risk(weather):
+                    high_risk_games.append({
+                        'game': game,
+                        'weather': weather
+                    })
+                    print(f"  🔴 HIGH RISK: {game['opponent']} - {game['date']} {game['time']}")
+        
+        # If no upcoming games at all, skip posting
+        if upcoming_count == 0:
+            print("ℹ️  No games in next 48 hours - skipping alert (off-day)")
+            log_workflow_run('skipped')
+            return
+        
+        print(f"\n📊 Found {len(high_risk_games)} high-risk game(s) out of {upcoming_count} total")
+        
+        # Post message (either high-risk alerts or all-clear)
+        message = build_high_risk_message(high_risk_games)
+        
+        if post_to_slack(message):
+            if high_risk_games:
+                print(f"✅ High-risk alert posted for {len(high_risk_games)} game(s)")
+                # ✅ LOG ANALYTICS - High-risk alert sent
+                log_alert('high_risk')
+            else:
+                print("✅ All-clear message posted")
+                # ✅ LOG ANALYTICS - All-clear message is also a high-risk check
+                log_alert('high_risk')
+            
+            log_workflow_run('success')
         else:
-            print("✅ All-clear message posted")
-    else:
-        print("❌ Failed to post to Slack")
+            print("❌ Failed to post to Slack")
+            log_workflow_run('failed')
+            
+    except Exception as e:
+        print(f"❌ Fatal error in high-risk alert: {e}")
+        log_workflow_run('failed')
+        raise
 
 if __name__ == "__main__":
     main()
