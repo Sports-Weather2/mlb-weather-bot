@@ -3,9 +3,6 @@ name: High Risk Weather Alerts
 
 on:
   schedule:
-    # Runs at both 17:00 UTC and 18:00 UTC - whichever matches 10 AM PT will execute
-    # During PDT (Mar-Nov): 17:00 UTC = 10 AM PT ✅
-    # During PST (Nov-Mar): 18:00 UTC = 10 AM PT ✅
     - cron: '0 17 * * *'
     - cron: '0 18 * * *'
   workflow_dispatch:
