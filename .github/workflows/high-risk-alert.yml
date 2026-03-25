@@ -4,9 +4,6 @@ name: High Risk Weather Alerts
 
 on:
   schedule:
-    # Scheduled 1 hour early to account for typical GitHub delays
-    # During PDT (Mar-Nov): 16:00 UTC = 9 AM PT (delays to ~10 AM)
-    # During PST (Nov-Mar): 17:00 UTC = 9 AM PT (delays to ~10 AM)
     - cron: '0 16 * * *'
     - cron: '0 17 * * *'
   workflow_dispatch:
@@ -29,7 +26,6 @@ jobs:
         id: check_already_ran
         run: |
           TODAY=$(TZ='America/Los_Angeles' date +%Y-%m-%d)
-          
           if [ -f last_high_risk_run.txt ]; then
             LAST_RUN=$(cat last_high_risk_run.txt)
             if [ "$LAST_RUN" = "$TODAY" ]; then
@@ -61,18 +57,17 @@ jobs:
           TODAY=$(TZ='America/Los_Angeles' date +%Y-%m-%d)
           echo "$TODAY" > last_high_risk_run.txt
       
-      - name: Keep workflow active (prevent cache staleness)
+      - name: Keep workflow active
         if: steps.check_already_ran.outputs.already_ran == 'false'
         run: |
           mkdir -p .github
           echo "Last run: $(TZ='America/Los_Angeles' date '+%Y-%m-%d %H:%M:%S %Z')" > .github/.highrisk-keep-alive
       
-      - name: Commit run tracking and keep-alive
+      - name: Commit tracking and keep-alive
         if: steps.check_already_ran.outputs.already_ran == 'false'
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add last_high_risk_run.txt
-          git add .github/.highrisk-keep-alive
+          git add last_high_risk_run.txt .github/.highrisk-keep-alive
           git diff --quiet && git diff --staged --quiet || git commit -m "Track high-risk alert run [skip ci]"
           git push || true
