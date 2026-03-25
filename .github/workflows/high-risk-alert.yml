@@ -1,10 +1,13 @@
 name: High Risk Weather Alerts
-# Simplified - removed strict time check causing failures
+# Scheduled 1 hour early to compensate for GitHub Actions delays
 
 on:
   schedule:
-    - cron: '0 17 * * *'  # 10 AM PT during DST
-    - cron: '0 18 * * *'  # 10 AM PT during Standard Time
+    # Scheduled 1 hour early to account for typical GitHub delays
+    # During PDT (Mar-Nov): 16:00 UTC = 9 AM PT (delays to ~10 AM)
+    # During PST (Nov-Mar): 17:00 UTC = 9 AM PT (delays to ~10 AM)
+    - cron: '0 16 * * *'
+    - cron: '0 17 * * *'
   workflow_dispatch:
 
 jobs:
