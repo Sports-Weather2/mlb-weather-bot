@@ -1,5 +1,6 @@
 name: Daily Weather Report
 # Scheduled 1 hour early to compensate for GitHub Actions delays
+# Auto-commits daily to prevent cache staleness
 
 on:
   schedule:
@@ -60,11 +61,18 @@ jobs:
           TODAY=$(TZ='America/Los_Angeles' date +%Y-%m-%d)
           echo "$TODAY" > last_weather_run.txt
       
-      - name: Commit run tracking
+      - name: Keep workflow active (prevent cache staleness)
+        if: steps.check_already_ran.outputs.already_ran == 'false'
+        run: |
+          mkdir -p .github
+          echo "Last run: $(TZ='America/Los_Angeles' date '+%Y-%m-%d %H:%M:%S %Z')" > .github/.weather-keep-alive
+      
+      - name: Commit run tracking and keep-alive
         if: steps.check_already_ran.outputs.already_ran == 'false'
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add last_weather_run.txt
+          git add .github/.weather-keep-alive
           git diff --quiet && git diff --staged --quiet || git commit -m "Track weather report run [skip ci]"
           git push || true
