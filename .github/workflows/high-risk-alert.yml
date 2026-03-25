@@ -1,13 +1,10 @@
 name: High Risk Weather Alerts
-# Cache refresh - 3/21/26 - Auto DST handling with duplicate prevention
+# Simplified - removed strict time check causing failures
 
 on:
   schedule:
-    # Dual cron for automatic DST handling
-    # During PDT (Mar-Nov): 17:00 UTC = 10 AM PT ✅
-    # During PST (Nov-Mar): 18:00 UTC = 10 AM PT ✅
-    - cron: '0 17 * * *'
-    - cron: '0 18 * * *'
+    - cron: '0 17 * * *'  # 10 AM PT during DST
+    - cron: '0 18 * * *'  # 10 AM PT during Standard Time
   workflow_dispatch:
 
 jobs:
@@ -24,21 +21,8 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
       
-      - name: Check if it's 10 AM Pacific Time
-        id: check_time
-        run: |
-          HOUR=$(TZ='America/Los_Angeles' date +%H)
-          echo "should_run=false" >> $GITHUB_OUTPUT
-          if [ "$HOUR" -eq "10" ]; then
-            echo "should_run=true" >> $GITHUB_OUTPUT
-            echo "✅ It's 10 AM PT - proceeding"
-          else
-            echo "📅 Not 10 AM PT (currently $HOUR:00) - skipping"
-          fi
-      
       - name: Check if already ran today
         id: check_already_ran
-        if: steps.check_time.outputs.should_run == 'true'
         run: |
           TODAY=$(TZ='America/Los_Angeles' date +%Y-%m-%d)
           
@@ -46,35 +30,35 @@ jobs:
             LAST_RUN=$(cat last_high_risk_run.txt)
             if [ "$LAST_RUN" = "$TODAY" ]; then
               echo "already_ran=true" >> $GITHUB_OUTPUT
-              echo "⏭️  Already ran today - skipping to prevent duplicate"
+              echo "⏭️  Already posted high-risk alert today - skipping"
             else
               echo "already_ran=false" >> $GITHUB_OUTPUT
               echo "✅ First run today - proceeding"
             fi
           else
             echo "already_ran=false" >> $GITHUB_OUTPUT
-            echo "✅ First run ever - proceeding"
+            echo "✅ First run - proceeding"
           fi
       
       - name: Update game schedule
-        if: steps.check_time.outputs.should_run == 'true' && steps.check_already_ran.outputs.already_ran == 'false'
+        if: steps.check_already_ran.outputs.already_ran == 'false'
         run: python update_schedule.py
       
       - name: Send High-risk alerts
-        if: steps.check_time.outputs.should_run == 'true' && steps.check_already_ran.outputs.already_ran == 'false'
+        if: steps.check_already_ran.outputs.already_ran == 'false'
         env:
           SLACK_WEBHOOK: ${{ secrets.HIGH_RISK_WEBHOOK_URL }}
           WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
         run: python high_risk_alert.py
       
       - name: Mark as ran today
-        if: steps.check_time.outputs.should_run == 'true' && steps.check_already_ran.outputs.already_ran == 'false'
+        if: steps.check_already_ran.outputs.already_ran == 'false'
         run: |
           TODAY=$(TZ='America/Los_Angeles' date +%Y-%m-%d)
           echo "$TODAY" > last_high_risk_run.txt
       
       - name: Commit run tracking
-        if: steps.check_time.outputs.should_run == 'true' && steps.check_already_ran.outputs.already_ran == 'false'
+        if: steps.check_already_ran.outputs.already_ran == 'false'
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
