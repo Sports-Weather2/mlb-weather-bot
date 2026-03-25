@@ -1,10 +1,13 @@
 name: Daily Weather Report
-# Simplified - removed strict time check causing failures
+# Scheduled 1 hour early to compensate for GitHub Actions delays
 
 on:
   schedule:
-    - cron: '0 14 * * *'  # 7 AM PT during DST
-    - cron: '0 15 * * *'  # 7 AM PT during Standard Time
+    # Scheduled 1 hour early to account for typical GitHub delays
+    # During PDT (Mar-Nov): 13:00 UTC = 6 AM PT (delays to ~7 AM)
+    # During PST (Nov-Mar): 14:00 UTC = 6 AM PT (delays to ~7 AM)
+    - cron: '0 13 * * *'
+    - cron: '0 14 * * *'
   workflow_dispatch:
 
 jobs:
