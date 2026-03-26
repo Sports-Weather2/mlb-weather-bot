@@ -6,6 +6,37 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ---
 
+## [1.1.1] - 2026-03-26
+
+### 🔧 Fixed
+- **Analytics Not Updating**: Fixed critical issue where `ANALYTICS.md` was not updating since March 21, 2026
+  - Added missing git commit steps to all three workflow files to push analytics updates back to GitHub
+  - Analytics data (`analytics.json` and `ANALYTICS.md`) now properly persists after each workflow run
+  - Real-time tracking now functional for all alert types
+
+### ✨ Added
+- **Game Status Analytics**: Added analytics tracking to `mlb_game_status_monitor.py`
+  - Rain delay alerts now logged to analytics
+  - Game resumption alerts now logged to analytics
+  - Postponement alerts now logged to analytics
+  - Workflow success/failure tracking added
+
+### 🔄 Changed
+- **Workflow Files Updated**:
+  - `weather-update.yml`: Added new analytics commit step
+  - `high-risk-alert.yml`: Updated existing commit step to include `analytics.json` and `ANALYTICS.md`
+  - `mlb-status-monitor.yml`: Updated existing commit step to include `analytics.json` and `ANALYTICS.md`
+- **Python Scripts**:
+  - `mlb_game_status_monitor.py`: Integrated `log_alert()` and `log_workflow_run()` functions
+
+### 🎯 Impact
+- `ANALYTICS.md` will now update in real-time after each workflow run
+- All six alert types now properly tracked: daily reports, high-risk alerts, delays, resumptions, postponements
+- System performance and accuracy metrics now reliably captured
+- Historical data tracking restored for ROI validation
+
+---
+
 ## [1.1.0] - 2026-03-18
 
 ### 🔧 Fixed
@@ -102,6 +133,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 | Version | Date | Key Changes |
 |---------|------|-------------|
+| 1.1.1 | 2026-03-26 | Analytics tracking fixed, game status alerts now logged |
 | 1.1.0 | 2026-03-18 | DST fixes, resumption alerts fixed, documentation enhanced |
 | 1.0.0 | 2026-03-12 | Initial release with core functionality |
 
@@ -122,7 +154,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## Maintenance Log
 
-**Last System Review:** March 18, 2026  
+**Last System Review:** March 26, 2026  
 **Next Scheduled Review:** April 1, 2026 (Regular Season start)  
 **Review Frequency:** Monthly during season, quarterly during off-season
 
