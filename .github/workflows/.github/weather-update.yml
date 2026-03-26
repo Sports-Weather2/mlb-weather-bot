@@ -25,3 +25,10 @@ jobs:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
           WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
         run: python weather_bot.py
+      
+      - name: Commit analytics updates
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add analytics.json ANALYTICS.md
+          git diff --quiet && git diff --staged --quiet || (git commit -m "📊 Update analytics [skip ci]" && git push)
