@@ -3,6 +3,7 @@ import json
 import requests
 from datetime import datetime
 import pytz
+from analytics import log_alert, log_workflow_run
 
 SLACK_WEBHOOK = os.environ.get('SLACK_WEBHOOK')
 STATE_FILE = 'game_states.json'
@@ -207,6 +208,14 @@ def send_delay_alert(game_status, alert_type):
     
     if response.status_code == 200:
         print(f"✅ {alert_type} alert sent for {game_status['matchup']}")
+        
+        # ✅ LOG ANALYTICS
+        if alert_type == "DELAY":
+            log_alert('delay')
+        elif alert_type == "RESUME":
+            log_alert('resumption')
+        elif alert_type == "POSTPONED":
+            log_alert('postponement')
     else:
         print(f"❌ Failed to send alert: {response.status_code}")
 
@@ -260,7 +269,13 @@ def monitor_games():
     print(f"\n✅ Monitoring complete - checked {len(games)} games")
 
 def main():
-    monitor_games()
+    try:
+        monitor_games()
+        log_workflow_run('success')
+    except Exception as e:
+        print(f"❌ Error in game status monitor: {e}")
+        log_workflow_run('failed')
+        raise
 
 if __name__ == "__main__":
     main()
