@@ -14,7 +14,7 @@ IMPACT_RULES = {
         'rain_prob': 70,
         'wind_gust': 30,
         'lightning': True,
-        'temp_extreme': [35, 100]
+        'temp_extreme': [20, 100]
     },
     'monitor': {
         'rain_prob': 40,
