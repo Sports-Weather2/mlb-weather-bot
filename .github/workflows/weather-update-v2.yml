@@ -1,3 +1,4 @@
+# Activated: March 29, 2026
 name: Daily Weather Report
 # Scheduled 1 hour early to compensate for GitHub Actions delays
 # Auto-commits daily to prevent cache staleness
