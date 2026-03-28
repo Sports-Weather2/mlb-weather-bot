@@ -6,6 +6,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [1.2.1] - 2026-03-29
+
+### 🔧 Changed
+- **Cold Temperature Threshold Adjustment**: Lowered HIGH RISK cold temperature threshold from 35°F to 20°F
+  - Reduces false HIGH RISK alerts for typical early-season cold games (30-35°F)
+  - MLB games regularly play in 30s°F range without delays
+  - Only extremely rare conditions (≤20°F) now trigger HIGH RISK red alerts
+  - Games 21-34°F will now show as MONITOR (yellow) instead of HIGH RISK (red)
+
+### 🎯 Impact
+- **Fewer false positives**: Today's 30-33°F games would no longer trigger HIGH RISK
+- **Better alert accuracy**: HIGH RISK reserved for truly dangerous conditions
+- **Improved user trust**: Red alerts only for conditions likely to cause actual delays
+- **Updated files**: `weather_bot.py` and `high_risk_alert.py` IMPACT_RULES
+
+### 📊 Alert Thresholds (Updated)
+**HIGH RISK (🔴):**
+- Temperature ≤20°F OR ≥100°F (changed from ≤35°F)
+- Rain ≥70%
+- Thunderstorms present
+- Wind gusts ≥30 mph
+
+**MONITOR (🟡):**
+- Temperature 21-39°F OR 96-99°F (expanded cold range)
+- Rain 40-69%
+- Wind sustained 15-29 mph
+
+---
+
 ## [1.2.0] - 2026-03-28
 
 ### ✨ Added
