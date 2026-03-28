@@ -26,9 +26,63 @@ def save_game_states(states):
     with open(STATE_FILE, 'w') as f:
         json.dump(states, f)
 
+def get_venue_info_from_game(game):
+    """Extract venue name and roof type from MLB game data"""
+    venue = game.get('venue', {})
+    venue_name = venue.get('name', 'Unknown Venue')
+    
+    # Determine roof type
+    roof_info = get_venue_roof_type(venue_name)
+    
+    return {
+        'name': venue_name,
+        'roof_type': roof_info['type'],
+        'roof_description': roof_info['description']
+    }
+
+def get_venue_roof_type(venue_name):
+    """Determine roof type for a venue"""
+    fixed_domes = {
+        'Tropicana Field': {'type': 'fixed_dome', 'description': '🏟️ Fixed Dome'},
+        'Rogers Centre': {'type': 'fixed_dome', 'description': '🏟️ Fixed Dome'}
+    }
+    
+    retractable_roofs = {
+        'Chase Field': {'type': 'retractable', 'description': '🔄 Retractable Roof'},
+        'loanDepot park': {'type': 'retractable', 'description': '🔄 Retractable Roof'},
+        'Globe Life Field': {'type': 'retractable', 'description': '🔄 Retractable Roof'},
+        'Minute Maid Park': {'type': 'retractable', 'description': '🔄 Retractable Roof'},
+        'T-Mobile Park': {'type': 'retractable', 'description': '🔄 Retractable Roof'},
+        'American Family Field': {'type': 'retractable', 'description': '🔄 Retractable Roof'}
+    }
+    
+    if venue_name in fixed_domes:
+        return fixed_domes[venue_name]
+    
+    if venue_name in retractable_roofs:
+        return retractable_roofs[venue_name]
+    
+    return {'type': 'open_air', 'description': '☀️ Open Air'}
+
+def should_monitor_game(game, venue_info):
+    """
+    Determine if we should monitor a game based on roof status.
+    
+    Strategy for real-time monitoring:
+    - Fixed domes: Still monitor (non-weather delays can happen)
+    - Retractable roofs: Always monitor (roof could be open)
+    - Open-air: Always monitor
+    
+    This returns True for all games since we only alert on actual state changes.
+    Roof info is added to alerts for context.
+    """
+    # Monitor all games - we only alert when delays/postponements actually happen
+    # Roof info is included in alerts for operational context
+    return True
+
 def get_mlb_game_status(game_date):
     """Get all MLB games for a specific date with their status"""
-    url = f"https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={game_date}&hydrate=linescore"
+    url = f"https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={game_date}&hydrate=linescore,venue"
     
     try:
         response = requests.get(url)
@@ -48,6 +102,9 @@ def get_mlb_game_status(game_date):
                     abstract_state = status['abstractGameState']
                     reason = status.get('reason', '')
                     
+                    # Get venue information
+                    venue_info = get_venue_info_from_game(game)
+                    
                     # Get score and inning if game has started
                     linescore = game.get('linescore', {})
                     away_score = game['teams']['away'].get('score', 0)
@@ -66,7 +123,8 @@ def get_mlb_game_status(game_date):
                         'inning_state': inning_state,
                         'detailed_state': detailed_state,
                         'abstract_state': abstract_state,
-                        'reason': reason
+                        'reason': reason,
+                        'venue': venue_info
                     })
         
         return games_status
@@ -122,6 +180,10 @@ def send_delay_alert(game_status, alert_type):
     pacific_tz = pytz.timezone('America/Los_Angeles')
     now = datetime.now(pacific_tz)
     
+    venue = game_status.get('venue', {})
+    venue_name = venue.get('name', 'Unknown Venue')
+    roof_description = venue.get('roof_description', '')
+    
     if alert_type == "DELAY":
         emoji = "🚨"
         title = "RAIN DELAY DETECTED"
@@ -162,6 +224,19 @@ def send_delay_alert(game_status, alert_type):
                         "text": f"*Status:*\n{game_status['detailed_state']}"
                     }
                 ]
+            },
+            {
+                "type": "section",
+                "fields": [
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Venue:*\n{venue_name}"
+                    },
+                    {
+                        "type": "mrkdwn",
+                        "text": f"*Stadium Type:*\n{roof_description}"
+                    }
+                ]
             }
         ]
     }
@@ -193,6 +268,24 @@ def send_delay_alert(game_status, alert_type):
             }
         })
     
+    # Add operational note for roofed stadiums
+    if venue.get('roof_type') in ['fixed_dome', 'retractable']:
+        if alert_type in ["DELAY", "POSTPONED"]:
+            if venue.get('roof_type') == 'retractable':
+                note = "⚠️ *Note:* Stadium has retractable roof - may have been open or roof malfunction"
+            else:
+                note = "⚠️ *Note:* Fixed dome stadium - delay likely non-weather related"
+            
+            message["blocks"].append({
+                "type": "context",
+                "elements": [
+                    {
+                        "type": "mrkdwn",
+                        "text": note
+                    }
+                ]
+            })
+    
     # Add timestamp
     message["blocks"].append({
         "type": "context",
@@ -207,7 +300,7 @@ def send_delay_alert(game_status, alert_type):
     response = requests.post(SLACK_WEBHOOK, json=message)
     
     if response.status_code == 200:
-        print(f"✅ {alert_type} alert sent for {game_status['matchup']}")
+        print(f"✅ {alert_type} alert sent for {game_status['matchup']} at {venue_name}")
         
         # ✅ LOG ANALYTICS
         if alert_type == "DELAY":
@@ -243,22 +336,28 @@ def monitor_games():
         game_pk = str(game['game_pk'])
         current_state = game['abstract_state']
         previous_state = previous_states.get(game_pk, {}).get('state')
+        venue_name = game['venue']['name']
+        roof_type = game['venue']['roof_type']
         
-        # NEW DELAY DETECTED
+        # Log monitoring with venue info
+        if previous_state is None:
+            print(f"   🔍 Tracking: {game['matchup']} at {venue_name} ({game['venue']['roof_description']})")
+        
+        # NEW DELAY DETECTED - Always alert regardless of roof
         if is_weather_delay(game) and previous_state != "DELAYED":
-            print(f"🚨 NEW DELAY: {game['matchup']} - {game['detailed_state']}")
+            print(f"🚨 NEW DELAY: {game['matchup']} at {venue_name} - {game['detailed_state']}")
             send_delay_alert(game, "DELAY")
             current_states[game_pk] = {'state': 'DELAYED', 'matchup': game['matchup']}
         
-        # GAME RESUMING
+        # GAME RESUMING - Always alert regardless of roof
         elif previous_state == "DELAYED" and current_state == "Live":
-            print(f"✅ RESUMING: {game['matchup']}")
+            print(f"✅ RESUMING: {game['matchup']} at {venue_name}")
             send_delay_alert(game, "RESUME")
             current_states[game_pk] = {'state': 'LIVE', 'matchup': game['matchup']}
         
-        # GAME POSTPONED
+        # GAME POSTPONED - Always alert regardless of roof
         elif game['detailed_state'] == 'Postponed' and previous_state != "POSTPONED":
-            print(f"📅 POSTPONED: {game['matchup']}")
+            print(f"📅 POSTPONED: {game['matchup']} at {venue_name}")
             send_delay_alert(game, "POSTPONED")
             current_states[game_pk] = {'state': 'POSTPONED', 'matchup': game['matchup']}
         
