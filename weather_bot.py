@@ -114,7 +114,7 @@ def get_venue_roof_info(venue_name):
 def get_roof_status_from_mlb(game_date, venue_name):
     """
     Check if retractable roof is open/closed for games today.
-    Returns: True if should alert (roof open or unknown), False if roof closed
+    Returns: True if should alert (roof confirmed open), False if roof closed or unknown
     """
     url = f"https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={game_date}&hydrate=venue"
     
@@ -134,19 +134,26 @@ def get_roof_status_from_mlb(game_date, venue_name):
                         # Some API responses include roof status
                         if 'roofType' in venue_data:
                             roof_type = venue_data.get('roofType', '').lower()
-                            if roof_type == 'closed':
+                            if roof_type == 'open':
+                                print(f"   🔓 {venue_name} roof confirmed OPEN - including in alert")
+                                return True
+                            elif roof_type == 'closed':
+                                print(f"   🔒 {venue_name} roof confirmed CLOSED - skipping alert")
                                 return False
                         
-                        # If we can't determine roof status, alert to be safe
-                        return True
+                        # If we can't determine roof status, assume closed (reduce false positives)
+                        print(f"   ❓ {venue_name} roof status unknown - assuming closed, skipping alert")
+                        return False
         
-        # Default to alerting if we can't find the game
-        return True
+        # Default to skipping if we can't find the game (reduce false positives)
+        print(f"   ❓ {venue_name} game not found in API - assuming closed, skipping alert")
+        return False
         
     except Exception as e:
         print(f"   ⚠️  Error checking roof status for {venue_name}: {e}")
-        # Default to alerting on error (safer for operations)
-        return True
+        # Default to skipping on error (reduce false positives)
+        print(f"   ❓ API error - assuming {venue_name} roof closed, skipping alert")
+        return False
 
 def get_weather_forecast(location, game_datetime):
     params = {
@@ -386,10 +393,8 @@ def main():
                 if roof_info['type'] == 'retractable':
                     should_alert = get_roof_status_from_mlb(game['date'], venue_name)
                     if should_alert:
-                        print(f"   ✅ Including {game['opponent']} at {venue_name} (retractable roof open/unknown)")
                         games_to_check.append(game)
-                    else:
-                        print(f"   ⏭️  Skipping {game['opponent']} at {venue_name} (retractable roof closed)")
+                    # Skip message already printed in function
                     continue
                 
                 # Open-air stadium - always include
