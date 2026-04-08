@@ -1,1 +1,62 @@
-{"824457": {"state": "Final", "matchup": "Kansas City Royals vs Cleveland Guardians"}, "824618": {"state": "Final", "matchup": "Baltimore Orioles vs Chicago White Sox"}, "823648": {"state": "Final", "matchup": "Arizona Diamondbacks vs New York Mets"}, "823402": {"state": "Final", "matchup": "San Diego Padres vs Pittsburgh Pirates"}, "822999": {"state": "Final", "matchup": "Chicago Cubs vs Tampa Bay Rays"}, "823887": {"state": "Final", "matchup": "Cincinnati Reds vs Miami Marlins"}, "822754": {"state": "Final", "matchup": "St. Louis Cardinals vs Washington Nationals"}, "824780": {"state": "Final", "matchup": "Milwaukee Brewers vs Boston Red Sox"}, "823567": {"state": "Final", "matchup": "Athletics vs New York Yankees"}, "822831": {"state": "Final", "matchup": "Los Angeles Dodgers vs Toronto Blue Jays"}, "823727": {"state": "Final", "matchup": "Detroit Tigers vs Minnesota Twins"}, "822916": {"state": "Final", "matchup": "Seattle Mariners vs Texas Rangers"}, "824375": {"state": "Final", "matchup": "Houston Astros vs Colorado Rockies"}, "824051": {"state": "Final", "matchup": "Atlanta Braves vs Los Angeles Angels"}, "823235": {"state": "Final", "matchup": "Philadelphia Phillies vs San Francisco Giants"}}
+{
+  "823403": {
+    "state": "FINAL",
+    "matchup": "San Diego Padres vs Pittsburgh Pirates"
+  },
+  "824455": {
+    "state": "LIVE",
+    "matchup": "Kansas City Royals vs Cleveland Guardians"
+  },
+  "824779": {
+    "state": "LIVE",
+    "matchup": "Milwaukee Brewers vs Boston Red Sox"
+  },
+  "824617": {
+    "state": "LIVE",
+    "matchup": "Baltimore Orioles vs Chicago White Sox"
+  },
+  "822915": {
+    "state": "LIVE",
+    "matchup": "Seattle Mariners vs Texas Rangers"
+  },
+  "822833": {
+    "state": "LIVE",
+    "matchup": "Los Angeles Dodgers vs Toronto Blue Jays"
+  },
+  "824374": {
+    "state": "LIVE",
+    "matchup": "Houston Astros vs Colorado Rockies"
+  },
+  "823234": {
+    "state": "LIVE",
+    "matchup": "Philadelphia Phillies vs San Francisco Giants"
+  },
+  "822753": {
+    "state": "LIVE",
+    "matchup": "St. Louis Cardinals vs Washington Nationals"
+  },
+  "824050": {
+    "state": "PREVIEW",
+    "matchup": "Atlanta Braves vs Los Angeles Angels"
+  },
+  "823646": {
+    "state": "PREVIEW",
+    "matchup": "Arizona Diamondbacks vs New York Mets"
+  },
+  "823000": {
+    "state": "PREVIEW",
+    "matchup": "Chicago Cubs vs Tampa Bay Rays"
+  },
+  "823885": {
+    "state": "PREVIEW",
+    "matchup": "Cincinnati Reds vs Miami Marlins"
+  },
+  "823564": {
+    "state": "PREVIEW",
+    "matchup": "Athletics vs New York Yankees"
+  },
+  "823726": {
+    "state": "PREVIEW",
+    "matchup": "Detroit Tigers vs Minnesota Twins"
+  }
+}
