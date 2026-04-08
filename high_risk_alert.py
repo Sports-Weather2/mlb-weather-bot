@@ -3,7 +3,7 @@ import json
 import requests
 import pytz
 from datetime import datetime, timedelta
-from analytics import log_alert, log_workflow_run, log_games_monitored, log_prediction_accuracy
+from analytics import log_alert, log_workflow_run, log_prediction_accuracy
 
 SLACK_WEBHOOK = os.environ.get('SLACK_WEBHOOK')
 WEATHER_API_KEY = os.environ.get('WEATHER_API_KEY')
@@ -408,9 +408,6 @@ def main():
             return
 
         print(f"\n📊 Found {len(high_risk_games)} high-risk game(s) out of {upcoming_count} total")
-
-        # ✅ Log games monitored for accurate analytics dashboard
-        log_games_monitored(upcoming_count)
 
         # ✅ Save predictions for accuracy tracking before posting
         if high_risk_games:
