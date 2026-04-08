@@ -6,6 +6,40 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [1.2.2] - 2026-04-08
+
+### 🔧 Changed
+- **Retractable Roof Unknown Status Handling**: Changed behavior when retractable roof status cannot be determined
+  - **Previous behavior:** Unknown roof status = Alert (conservative, more false positives)
+  - **New behavior:** Unknown roof status = Skip alert (reduces false positives)
+  - Applies to all 6 retractable roof stadiums (Chase Field, loanDepot park, Globe Life Field, Minute Maid Park, T-Mobile Park, American Family Field)
+  - Roof confirmed OPEN = Still alerts (correct behavior maintained)
+  - Roof confirmed CLOSED = Still skips (correct behavior maintained)
+
+### 🎯 Impact
+- **Reduced false positives**: Retractable roof games no longer alert when MLB API doesn't provide roof status
+- **Example:** Miami Marlins with 100% rain but unknown roof status will now be skipped (no false alert)
+- **Better efficiency**: Fewer unnecessary alerts for operations teams to review
+- **Trade-off:** Slight increase in missed alerts IF roof is actually open but API doesn't report it (rare scenario)
+- **Updated files**: `weather_bot.py` and `high_risk_alert.py` - `get_roof_status_from_mlb()` function
+
+### 📊 New Alert Behavior for Retractable Roofs:
+
+| MLB API Response | Alert Behavior |
+|------------------|----------------|
+| Roof = Open | ✅ Alert (weather can impact game) |
+| Roof = Closed | ⏭️ Skip (protected from weather) |
+| Roof = Unknown/Not provided | ⏭️ Skip (assume closed) - NEW |
+| API Error | ⏭️ Skip (assume closed) - NEW |
+
+### 🔍 Enhanced Logging:
+Console output now shows specific roof status decisions:
+- `🔓 [Venue] roof confirmed OPEN - including in alert`
+- `🔒 [Venue] roof confirmed CLOSED - skipping alert`  
+- `❓ [Venue] roof status unknown - assuming closed, skipping alert` (NEW)
+
+---
+
 ## [1.2.1] - 2026-03-29
 
 ### 🔧 Changed
