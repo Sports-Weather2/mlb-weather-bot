@@ -12,12 +12,11 @@ jobs:
       - uses: actions/checkout@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          # ✅ FIX 1: Always fetch full history so git pull gets latest state
+          # ✅ Always fetch full history so git pull gets latest state
           fetch-depth: 0
 
-      # ✅ FIX 2: Pull latest commits AFTER checkout so game_states.json
-      #           reflects what the previous run saved — this was the primary
-      #           cause of every run seeing stale/empty state and re-alerting
+      # ✅ Pull latest commits AFTER checkout so game_states.json
+      #    reflects what the previous run saved
       - name: Pull latest state from repo
         run: |
           git pull --rebase origin main || true
@@ -50,6 +49,12 @@ jobs:
           SLACK_WEBHOOK: ${{ secrets.HIGH_RISK_WEBHOOK_URL }}
         run: python mlb_game_status_monitor.py
 
+      # ✅ FIX 3 & 4: Log skipped runs outside game hours so total run
+      #               count and skipped count are accurately tracked
+      - name: Log skipped run outside game hours
+        if: steps.check_time.outputs.should_run == 'false'
+        run: python -c "from analytics import log_workflow_run; log_workflow_run('skipped')"
+
       - name: Commit game state tracking and analytics
         if: steps.check_time.outputs.should_run == 'true'
         run: |
@@ -59,6 +64,18 @@ jobs:
           git add game_states.json high_risk_predictions.json analytics.json ANALYTICS.md 2>/dev/null || true
           git diff --quiet && git diff --staged --quiet || \
             git commit -m "📊 Update game states and analytics [skip ci]"
-          # ✅ FIX 3: Rebase before push to handle concurrent run conflicts
+          # ✅ Rebase before push to handle concurrent run conflicts
           git pull --rebase origin main || true
           git push || echo "⚠️ WARNING: Push failed — game state may not persist to next run"
+
+      # ✅ Commit analytics even on skipped runs so skipped count persists
+      - name: Commit analytics for skipped run
+        if: steps.check_time.outputs.should_run == 'false'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add analytics.json ANALYTICS.md 2>/dev/null || true
+          git diff --quiet && git diff --staged --quiet || \
+            git commit -m "📊 Update analytics (skipped run) [skip ci]"
+          git pull --rebase origin main || true
+          git push || echo "⚠️ WARNING: Push failed — skipped run analytics may not persist"
