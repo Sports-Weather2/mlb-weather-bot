@@ -14,15 +14,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-      
+
       - name: Install dependencies
         run: pip install -r requirements.txt
-      
+
       - name: Check if already ran today
         id: check_already_ran
         run: |
@@ -40,36 +40,61 @@ jobs:
             echo "already_ran=false" >> $GITHUB_OUTPUT
             echo "✅ First run - proceeding"
           fi
-      
+
       - name: Update game schedule
         if: steps.check_already_ran.outputs.already_ran == 'false'
         run: python update_schedule.py
-      
+
       - name: Run weather bot
         if: steps.check_already_ran.outputs.already_ran == 'false'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
           WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
         run: python weather_bot.py
-      
+
       - name: Mark as ran today
         if: steps.check_already_ran.outputs.already_ran == 'false'
         run: |
           TODAY=$(TZ='America/Los_Angeles' date +%Y-%m-%d)
           echo "$TODAY" > last_weather_run.txt
-      
+
       - name: Keep workflow active (prevent cache staleness)
         if: steps.check_already_ran.outputs.already_ran == 'false'
         run: |
           mkdir -p .github
           echo "Last run: $(TZ='America/Los_Angeles' date '+%Y-%m-%d %H:%M:%S %Z')" > .github/.weather-keep-alive
-      
-      - name: Commit run tracking and keep-alive
+
+      - name: Commit run tracking, analytics, and keep-alive
         if: steps.check_already_ran.outputs.already_ran == 'false'
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add last_weather_run.txt
-          git add .github/.weather-keep-alive
-          git diff --quiet && git diff --staged --quiet || git commit -m "Track weather report run [skip ci]"
-          git push || true
+          git add last_weather_run.txt .github/.weather-keep-alive || true
+          # ✅ FIX 2: Commit analytics so daily report metrics persist
+          git add analytics.json ANALYTICS.md 2>/dev/null || true
+          git diff --quiet && git diff --staged --quiet || \
+            git commit -m "📊 Update analytics and tracking [skip ci]"
+          # ✅ FIX 1: Rebase before push to prevent silent failure
+          #           that could cause duplicate daily reports
+          git pull --rebase origin main || true
+          git push || echo "⚠️ WARNING: Push failed — dedup file may not persist"
+
+      # ✅ FIX 3 ANALYTICS ONLY — logs DST backup skipped runs for
+      #    accurate total run count and skipped count in dashboard
+      #    No impact on Slack alerting whatsoever
+      - name: Log skipped run (already ran today)
+        if: steps.check_already_ran.outputs.already_ran == 'true'
+        run: python -c "from analytics import log_workflow_run; log_workflow_run('skipped')"
+
+      # ✅ FIX 3 ANALYTICS ONLY — commits skipped run count so it
+      #    persists between GitHub Actions VMs
+      - name: Commit analytics for skipped run
+        if: steps.check_already_ran.outputs.already_ran == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add analytics.json ANALYTICS.md 2>/dev/null || true
+          git diff --quiet && git diff --staged --quiet || \
+            git commit -m "📊 Update analytics (skipped run) [skip ci]"
+          git pull --rebase origin main || true
+          git push || echo "⚠️ WARNING: Push failed — skipped run analytics may not persist"
