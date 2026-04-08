@@ -6,44 +6,140 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [1.3.3] - 2026-04-08
+
+### 🐛 Fixed
+
+#### All Three Workflows — Skipped Run Analytics Not Logged
+- **`weather-update-v2.yml`**, **`high-risk-alert-v2.yml`**,
+  **`mlb-status-monitor-v2.yml`**: When the DST backup cron or
+  outside-hours time check caused a run to be skipped, the Python
+  script was never reached meaning `log_workflow_run('skipped')`
+  was never called — skipped run count and total run count were
+  both severely undercounted in the dashboard
+  - **Fix:** Added **"Log skipped run"** step to all three workflows
+    that fires specifically when `already_ran == 'true'` or
+    `should_run == 'false'`
+  - **Fix:** Added **"Commit analytics for skipped run"** step to
+    all three workflows so the incremented skipped count is
+    committed back to the repo and survives VM teardown
+
+#### `weather-update-v2.yml` — Analytics Never Committed
+- `analytics.json` and `ANALYTICS.md` were never included in the
+  commit step, meaning daily report metrics (daily reports sent,
+  games monitored) were written locally but lost when the GitHub
+  Actions VM was torn down after each run
+  - **Fix:** Added `analytics.json` and `ANALYTICS.md` to the
+    commit step so daily report analytics persist correctly
+
+#### `weather-update-v2.yml` — Silent Push Failure Risk
+- `git push || true` could silently lose `last_weather_run.txt`
+  if two cron runs overlapped, potentially causing duplicate daily
+  weather reports to post to Slack
+  - **Fix:** Added `git pull --rebase origin main` before push and
+    replaced `|| true` with a warning echo
+
+#### `high_risk_alert.py` — Games Monitored Double Counting
+- `log_games_monitored(upcoming_count)` was being called in both
+  `high_risk_alert.py` and `weather_bot.py` for the same games,
+  causing the Games Monitored metric to be counted twice on any
+  day both scripts ran
+  - **Fix:** Removed `log_games_monitored()` call and import from
+    `high_risk_alert.py` — `weather_bot.py` is the single source
+    of truth for games monitored count
+
+### 🔧 Changed
+
+#### `weather-update-v2.yml`
+- Commit step renamed from `"Commit run tracking and keep-alive"`
+  to `"Commit run tracking, analytics, and keep-alive"` to reflect
+  that analytics files are now included
+- `git push || true` replaced with `git pull --rebase` before push
+  and warning echo on failure
+- Added two new steps at bottom for skipped run analytics logging
+  and commit — only fire when `already_ran == 'true'`
+
+#### `high-risk-alert-v2.yml`
+- Added two new steps at bottom for skipped run analytics logging
+  and commit — only fire when `already_ran == 'true'`
+
+#### `mlb-status-monitor-v2.yml`
+- Added skipped run analytics commit step — only fires when
+  `should_run == 'false'`
+
+#### `high_risk_alert.py`
+- Removed `log_games_monitored` from imports
+- Removed `log_games_monitored(upcoming_count)` call from `main()`
+- `weather_bot.py` remains the single source of truth for games
+  monitored — no double counting
+
+### 🎯 Impact
+- **Skipped Runs now accurately tracked** across all three workflows
+  — DST backup crons and outside-hours MLB monitor runs all counted
+- **Total Workflow Runs** now reflects true execution count including
+  all skipped cycles
+- **Games Monitored** no longer double counted — single accurate
+  source from `weather_bot.py`
+- **Daily report analytics** now persist correctly after each 7 AM
+  weather report run
+- **Duplicate daily report risk eliminated** via push safety in
+  `weather-update-v2.yml`
+
+### 📊 Workflow Analytics Coverage (After Fix)
+
+| Workflow | Active Run | Skipped Run | Analytics Committed |
+|---|---|---|---|
+| `weather-update-v2.yml` | ✅ Logged | ✅ Now logged | ✅ Now committed |
+| `high-risk-alert-v2.yml` | ✅ Logged | ✅ Now logged | ✅ Committed |
+| `mlb-status-monitor-v2.yml` | ✅ Logged | ✅ Now logged | ✅ Committed |
+
+---
+
 ## [1.3.2] - 2026-04-08
 
 ### ✨ Added
 
 #### `high_risk_alert.py` — Games Monitored Tracking
-- Added `log_games_monitored` and `log_prediction_accuracy` to imports
-- Added `log_games_monitored(upcoming_count)` call in `main()` after
-  upcoming games are tallied — ensures the Games Monitored metric in
-  the analytics dashboard populates correctly instead of showing 0
+- Added `log_games_monitored` and `log_prediction_accuracy` to
+  imports
+- Added `log_games_monitored(upcoming_count)` call in `main()`
+  after upcoming games are tallied — ensures the Games Monitored
+  metric in the analytics dashboard populates correctly instead
+  of showing 0
 
 #### `mlb-status-monitor-v2.yml` — Skipped Run Tracking
-- **New step "Log skipped run outside game hours"**: When the time check
-  determines it is outside 10 AM–10 PM PT, a Python one-liner now calls
-  `log_workflow_run('skipped')` so every run is counted regardless of
-  whether the monitor actually executes
-- **New step "Commit analytics for skipped run"**: Commits `analytics.json`
-  and `ANALYTICS.md` even on skipped runs so the skipped count persists
-  to the repo and isn't lost when the VM is torn down
+- **New step "Log skipped run outside game hours"**: When the time
+  check determines it is outside 10 AM–10 PM PT, a Python one-liner
+  now calls `log_workflow_run('skipped')` so every run is counted
+  regardless of whether the monitor actually executes
+- **New step "Commit analytics for skipped run"**: Commits
+  `analytics.json` and `ANALYTICS.md` even on skipped runs so the
+  skipped count persists to the repo and isn't lost when the VM
+  is torn down
 
 #### `analytics.py` — Accurate Key Insights Calculations
-- **`active_game_days`**: New variable that counts only days with at least
-  1 alert sent — excludes off-days and skipped days from the average,
-  giving a more meaningful alerts-per-day metric
-- **Revised time saved formula**: Changed from `days_active * 0.83 hours`
-  (arbitrary) to `alerts_sent * 0.25 hours` — each alert represents
-  approximately 15 minutes of manual monitoring work saved, making the
-  estimate defensible and tied to real activity data
-- **`estimated_value`**: Now calculated from the revised time saved formula
-  instead of being derived from days active
+- **`active_game_days`**: New variable that counts only days with
+  at least 1 alert sent — excludes off-days and skipped days from
+  the average, giving a more meaningful alerts-per-day metric
+- **Revised time saved formula**: Changed from
+  `days_active * 0.83 hours` (arbitrary) to
+  `alerts_sent * 0.25 hours` — each alert represents approximately
+  15 minutes of manual monitoring work saved, making the estimate
+  defensible and tied to real activity data
+- **`estimated_value`**: Now calculated from the revised time saved
+  formula instead of being derived from days active
 
 ### 🔧 Changed
 
 #### `analytics.py`
 - `generate_analytics_markdown()` Key Insights section now shows:
-  - `Active Game Days` alongside `Days Active` for clearer distinction
-  - `Average Alerts/Day (game days only)` uses `active_game_days` as
-    denominator instead of `days_active` — removes off-day dilution
-  - `Time Saved` and `Estimated Value` now reflect alert-based calculation
+  - `Active Game Days` alongside `Days Active` for clearer
+    distinction
+  - `Average Alerts/Day (game days only)` uses `active_game_days`
+    as denominator instead of `days_active` — removes off-day
+    dilution
+  - `Time Saved` and `Estimated Value` now reflect alert-based
+    calculation
 - System Reliability table label updated from
   `⏭️ Skipped (time check)` → `⏭️ Skipped (outside game hours)`
   for clearer description of why runs are skipped
@@ -56,9 +152,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ### 🐛 Fixed
 
 #### Analytics Dashboard — Metrics Showing Incorrect Values
-- **`Games Monitored = 0`**: Fixed — `log_games_monitored()` was never
-  being called in `high_risk_alert.py` despite the function existing
-  in `analytics.py`
+- **`Games Monitored = 0`**: Fixed — `log_games_monitored()` was
+  never being called in `high_risk_alert.py` despite the function
+  existing in `analytics.py`
 - **`Skipped Runs = 0`**: Fixed — outside-hours runs were silently
   skipping the Python script entirely with no analytics logging,
   causing both skipped count and total run count to be severely
@@ -66,18 +162,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   significant gap in reporting
 - **`Average Alerts/Day` diluted by off-days**: Fixed — calculation
   now uses active game days only
-- **`Time Saved / Estimated Value` not tied to real data**: Fixed —
-  now derived from actual alerts sent rather than days active
+- **`Time Saved / Estimated Value` not tied to real data**: Fixed
+  — now derived from actual alerts sent rather than days active
 
 ### 🎯 Impact
-- **Games Monitored** now populates in real-time as `high_risk_alert.py`
-  and `weather_bot.py` run each day
-- **Skipped Runs and Total Runs** now accurately reflect all workflow
-  executions including outside-hours cycles
+- **Games Monitored** now populates in real-time as
+  `high_risk_alert.py` and `weather_bot.py` run each day
+- **Skipped Runs and Total Runs** now accurately reflect all
+  workflow executions including outside-hours cycles
 - **Average Alerts/Day** now reflects only days with actual game
   activity — a more meaningful operational metric
-- **Time Saved / Estimated Value** now scales with real system usage
-  rather than calendar days
+- **Time Saved / Estimated Value** now scales with real system
+  usage rather than calendar days
 
 ### 📊 Analytics Dashboard Metrics (After Fix)
 
@@ -102,22 +198,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   high-risk predicted game PKs to `high_risk_predictions.json` so
   the MLB status monitor can cross-reference actual delays and
   calculate real prediction accuracy
-  - Called automatically in `main()` whenever high-risk games are found
-  - Keyed by date to prevent yesterday's predictions from polluting
-    today's accuracy
+  - Called automatically in `main()` whenever high-risk games are
+    found
+  - Keyed by date to prevent yesterday's predictions from
+    polluting today's accuracy
 
 #### `mlb_game_status_monitor.py` — Prediction Accuracy Tracking
 - **New function `check_and_log_prediction_accuracy()`**: When an
-  actual delay or postponement fires, cross-references against saved
-  predictions and logs the result to analytics
+  actual delay or postponement fires, cross-references against
+  saved predictions and logs the result to analytics
   - `TRUE POSITIVE` — game was predicted high-risk AND actually
     delayed ✅
   - `FALSE NEGATIVE` — delay occurred but was not predicted ❌
   - Handles missing predictions file gracefully (logs as false
     negative)
-- **New function `check_and_log_false_positives()`**: At the end of
-  each monitoring cycle, checks any predicted games that finished
-  without a delay and logs them as false positives
+- **New function `check_and_log_false_positives()`**: At the end
+  of each monitoring cycle, checks any predicted games that
+  finished without a delay and logs them as false positives
   - Called once per cycle after all games are processed
   - Only runs if `high_risk_predictions.json` exists for today
 
@@ -161,28 +258,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ### 🐛 Fixed
 
 #### `mlb_game_status_monitor.py` — Duplicate Alert & Wrong Alert Type Bugs
-- **CRITICAL: "RAIN DELAY DETECTED" firing on already-Postponed games**
+- **CRITICAL: "RAIN DELAY DETECTED" firing on already-Postponed
+  games**
   - **Root cause:** `is_weather_delay()` included `'postponed'` in
-    `delay_keywords`, causing Postponed games to match the DELAY check
-    before the POSTPONED check
+    `delay_keywords`, causing Postponed games to match the DELAY
+    check before the POSTPONED check
   - **Fix:** Split into two separate functions —
     `is_active_weather_delay()` explicitly excludes
     Postponed/Suspended states, and `is_postponed()` /
     `is_suspended()` handle those states independently
   - **Fix:** Reordered check priority — POSTPONED is now evaluated
-    **before** DELAY so a Postponed game can never be mislabeled as
-    a Rain Delay
+    **before** DELAY so a Postponed game can never be mislabeled
+    as a Rain Delay
 
-- **CRITICAL: Duplicate alerts firing every 10 minutes for the same
-  game/status**
+- **CRITICAL: Duplicate alerts firing every 10 minutes for the
+  same game/status**
   - **Root cause:** `game_states.json` was never actually read from
     the previous run — GitHub Actions spins up a fresh VM each run,
-    and without a `git pull` after checkout, the committed state file
-    was invisible to subsequent runs
+    and without a `git pull` after checkout, the committed state
+    file was invisible to subsequent runs
   - **Fix:** Added `normalize_api_state()` to convert raw MLB API
-    values (`"Live"`, `"Preview"`, `"Final"`) into consistent internal
-    constants (`STATE_LIVE`, `STATE_PREVIEW`, `STATE_FINAL`),
-    preventing comparison mismatches
+    values (`"Live"`, `"Preview"`, `"Final"`) into consistent
+    internal constants (`STATE_LIVE`, `STATE_PREVIEW`,
+    `STATE_FINAL`), preventing comparison mismatches
 
 - **Inconsistent state value storage**
   - **Root cause:** Some states were stored as hardcoded strings
@@ -194,8 +292,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
     read/write/compare operations
 
 - **Added `STATE_SUSPENDED` handling**
-  - Suspended games were previously unhandled and would fall through
-    all checks silently
+  - Suspended games were previously unhandled and would fall
+    through all checks silently
   - Now detected via `is_suspended()` and alerts via new
     `STATE_SUSPENDED` alert type
 
@@ -207,8 +305,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
     snapshot, never seeing the state file committed by the previous
     run — every run behaved as if no games had ever been seen
   - **Fix:** Added `fetch-depth: 0` to checkout and a dedicated
-    **"Pull latest state from repo"** step immediately after checkout
-    using `git pull --rebase origin main`
+    **"Pull latest state from repo"** step immediately after
+    checkout using `git pull --rebase origin main`
   - **Fix:** Added `git pull --rebase` before `git push` in the
     commit step to handle concurrent run conflicts instead of
     silently dropping state with `|| true`
@@ -235,7 +333,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   - `is_postponed(game_status)` — dedicated Postponed state check
   - `is_suspended(game_status)` — dedicated Suspended state check
 - Added `normalize_api_state()` to map raw MLB API
-  `abstractGameState` / `detailedState` values to internal constants
+  `abstractGameState` / `detailedState` values to internal
+  constants
 - `monitor_games()` check order now enforces:
   **POSTPONED → SUSPENDED → DELAY → RESUME → no change**
 - State stored in `game_states.json` now always uses normalized
@@ -249,8 +348,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   state file preview
 - Extended `git push` failure handling from silent `|| true` to
   warning echo
-- Monitoring window hard cutoff at 22:00 PT intentionally maintained
-  — reduces noise after West Coast prime-time games complete
+- Monitoring window hard cutoff at 22:00 PT intentionally
+  maintained — reduces noise after West Coast prime-time games
+  complete
 
 #### `high-risk-alert-v2.yml`
 - Added `git pull --rebase` before push in commit step
@@ -260,12 +360,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### 🎯 Impact
 - **Zero duplicate alerts** for Postponed or Delayed games — each
-  state change alerts exactly once regardless of how many monitoring
-  runs follow
+  state change alerts exactly once regardless of how many
+  monitoring runs follow
 - **Correct alert types** — a Postponed game now always shows
   `📅 GAME POSTPONED`, never `🚨 RAIN DELAY DETECTED`
-- **State survives across GitHub Actions runs** — `game_states.json`
-  is reliably read and written between the 10-minute monitoring cycles
+- **State survives across GitHub Actions runs** —
+  `game_states.json` is reliably read and written between the
+  10-minute monitoring cycles
 - **Transparent failures** — push failures now visible in Actions
   logs instead of silently breaking the deduplication system
 
@@ -285,27 +386,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ## [1.2.2] - 2026-04-08
 
 ### 🔧 Changed
-- **Retractable Roof Unknown Status Handling**: Changed behavior when
-  retractable roof status cannot be determined
-  - **Previous behavior:** Unknown roof status = Alert (conservative,
-    more false positives)
-  - **New behavior:** Unknown roof status = Skip alert (reduces false
-    positives)
+- **Retractable Roof Unknown Status Handling**: Changed behavior
+  when retractable roof status cannot be determined
+  - **Previous behavior:** Unknown roof status = Alert
+    (conservative, more false positives)
+  - **New behavior:** Unknown roof status = Skip alert (reduces
+    false positives)
   - Applies to all 6 retractable roof stadiums (Chase Field,
-    loanDepot park, Globe Life Field, Minute Maid Park, T-Mobile Park,
-    American Family Field)
+    loanDepot park, Globe Life Field, Minute Maid Park, T-Mobile
+    Park, American Family Field)
   - Roof confirmed OPEN = Still alerts (correct behavior maintained)
-  - Roof confirmed CLOSED = Still skips (correct behavior maintained)
+  - Roof confirmed CLOSED = Still skips (correct behavior
+    maintained)
 
 ### 🎯 Impact
-- **Reduced false positives**: Retractable roof games no longer alert
-  when MLB API doesn't provide roof status
+- **Reduced false positives**: Retractable roof games no longer
+  alert when MLB API doesn't provide roof status
 - **Example:** Miami Marlins with 100% rain but unknown roof status
   will now be skipped (no false alert)
-- **Better efficiency**: Fewer unnecessary alerts for operations teams
-  to review
-- **Trade-off:** Slight increase in missed alerts IF roof is actually
-  open but API doesn't report it (rare scenario)
+- **Better efficiency**: Fewer unnecessary alerts for operations
+  teams to review
+- **Trade-off:** Slight increase in missed alerts IF roof is
+  actually open but API doesn't report it (rare scenario)
 - **Updated files**: `weather_bot.py` and `high_risk_alert.py` —
   `get_roof_status_from_mlb()` function
 
@@ -322,8 +424,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 Console output now shows specific roof status decisions:
 - `🔓 [Venue] roof confirmed OPEN - including in alert`
 - `🔒 [Venue] roof confirmed CLOSED - skipping alert`
-- `❓ [Venue] roof status unknown - assuming closed, skipping alert`
-  (NEW)
+- `❓ [Venue] roof status unknown - assuming closed, skipping
+  alert` (NEW)
 
 ---
 
@@ -335,18 +437,18 @@ Console output now shows specific roof status decisions:
   - Reduces false HIGH RISK alerts for typical early-season cold
     games (30–35°F)
   - MLB games regularly play in 30s°F range without delays
-  - Only extremely rare conditions (≤20°F) now trigger HIGH RISK red
-    alerts
-  - Games 21–34°F will now show as MONITOR (yellow) instead of HIGH
-    RISK (red)
+  - Only extremely rare conditions (≤20°F) now trigger HIGH RISK
+    red alerts
+  - Games 21–34°F will now show as MONITOR (yellow) instead of
+    HIGH RISK (red)
 
 ### 🎯 Impact
 - **Fewer false positives**: Today's 30–33°F games would no longer
   trigger HIGH RISK
 - **Better alert accuracy**: HIGH RISK reserved for truly dangerous
   conditions
-- **Improved user trust**: Red alerts only for conditions likely to
-  cause actual delays
+- **Improved user trust**: Red alerts only for conditions likely
+  to cause actual delays
 - **Updated files**: `weather_bot.py` and `high_risk_alert.py`
   IMPACT_RULES
 
@@ -367,26 +469,28 @@ Console output now shows specific roof status decisions:
 ## [1.2.0] - 2026-03-28
 
 ### ✨ Added
-- **Roof-Aware Weather Filtering**: Intelligent stadium roof detection
-  to reduce false weather alerts
-  - Fixed dome stadiums (Tropicana Field, Rogers Centre) automatically
-    excluded from weather forecasts
-  - Retractable roof stadiums (Chase Field, loanDepot park, Globe Life
-    Field, Minute Maid Park, T-Mobile Park, American Family Field)
-    checked via MLB API for open/closed status
+- **Roof-Aware Weather Filtering**: Intelligent stadium roof
+  detection to reduce false weather alerts
+  - Fixed dome stadiums (Tropicana Field, Rogers Centre)
+    automatically excluded from weather forecasts
+  - Retractable roof stadiums (Chase Field, loanDepot park, Globe
+    Life Field, Minute Maid Park, T-Mobile Park, American Family
+    Field) checked via MLB API for open/closed status
   - Only alerts for games where weather can actually impact play
-  - Reduces noise by ~27% (8 of 30 MLB stadiums have roof protection)
+  - Reduces noise by ~27% (8 of 30 MLB stadiums have roof
+    protection)
 
 ### 🔄 Changed
-- **`weather_bot.py`**: Added roof filtering before weather API calls
+- **`weather_bot.py`**: Added roof filtering before weather API
+  calls
   - New functions: `get_venue_name_from_location()`,
     `get_venue_roof_info()`, `get_roof_status_from_mlb()`
   - Filters games by roof status before fetching weather data
   - Saves weather API calls for games in closed/domed stadiums
   - Enhanced console logging shows which games are skipped and why
 
-- **`high_risk_alert.py`**: Added roof filtering for 10 AM high-risk
-  alerts
+- **`high_risk_alert.py`**: Added roof filtering for 10 AM
+  high-risk alerts
   - Same roof detection logic as weather bot
   - Only alerts for games vulnerable to weather impacts
   - Reduces false positives for operations teams
@@ -395,19 +499,19 @@ Console output now shows specific roof status decisions:
   with roof context
   - Monitors ALL games regardless of roof (delays can happen for
     non-weather reasons)
-  - Adds venue name and roof type (🏟️ Fixed Dome / 🔄 Retractable /
-    ☀️ Open Air) to delay alerts
-  - Includes smart operational notes for unexpected delays at roofed
-    stadiums
+  - Adds venue name and roof type (🏟️ Fixed Dome / 🔄 Retractable
+    / ☀️ Open Air) to delay alerts
+  - Includes smart operational notes for unexpected delays at
+    roofed stadiums
   - Helps ops distinguish weather vs. non-weather issues
 
 ### 🎯 Impact
-- **Reduced alert noise**: Eliminates unnecessary weather alerts for
-  games protected by closed roofs
-- **Better operational accuracy**: Roof context helps teams understand
-  delay causes
-- **Smarter resource usage**: Fewer weather API calls for games that
-  don't need monitoring
+- **Reduced alert noise**: Eliminates unnecessary weather alerts
+  for games protected by closed roofs
+- **Better operational accuracy**: Roof context helps teams
+  understand delay causes
+- **Smarter resource usage**: Fewer weather API calls for games
+  that don't need monitoring
 - **Safer defaults**: If roof status unknown or API fails, system
   defaults to alerting (conservative approach)
 
@@ -421,12 +525,12 @@ Console output now shows specific roof status decisions:
 ## [1.1.1] - 2026-03-26
 
 ### 🔧 Fixed
-- **Analytics Not Updating**: Fixed critical issue where `ANALYTICS.md`
-  was not updating since March 21, 2026
-  - Added missing git commit steps to all three workflow files to push
-    analytics updates back to GitHub
-  - Analytics data (`analytics.json` and `ANALYTICS.md`) now properly
-    persists after each workflow run
+- **Analytics Not Updating**: Fixed critical issue where
+  `ANALYTICS.md` was not updating since March 21, 2026
+  - Added missing git commit steps to all three workflow files to
+    push analytics updates back to GitHub
+  - Analytics data (`analytics.json` and `ANALYTICS.md`) now
+    properly persists after each workflow run
   - Real-time tracking now functional for all alert types
 
 ### ✨ Added
@@ -439,19 +543,20 @@ Console output now shows specific roof status decisions:
 
 ### 🔄 Changed
 - **Workflow Files Updated**:
-  - `weather-update.yml`: Added new analytics commit step to include
-    `analytics.json` and `ANALYTICS.md`
+  - `weather-update.yml`: Added new analytics commit step to
+    include `analytics.json` and `ANALYTICS.md`
   - `high-risk-alert.yml`: Updated existing commit step to include
     `analytics.json` and `ANALYTICS.md`
-  - `mlb-status-monitor.yml`: Updated existing commit step to include
-    `analytics.json` and `ANALYTICS.md`
+  - `mlb-status-monitor.yml`: Updated existing commit step to
+    include `analytics.json` and `ANALYTICS.md`
 
 - **Python Scripts**:
   - `mlb_game_status_monitor.py`: Integrated `log_alert()` and
     `log_workflow_run()` functions
 
 ### 🎯 Impact
-- `ANALYTICS.md` will now update in real-time after each workflow run
-- All six alert types now properly tracked: daily reports, high-risk
-  alerts, delays, resumptions, postponements
+- `ANALYTICS.md` will now update in real-time after each workflow
+  run
+- All six alert types now properly tracked: daily reports,
+  high-risk alerts, delays, resumptions, postponements
 - System performance and accuracy metrics now reliably captured
