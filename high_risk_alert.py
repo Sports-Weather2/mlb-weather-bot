@@ -3,7 +3,7 @@ import json
 import requests
 import pytz
 from datetime import datetime, timedelta
-from analytics import log_alert, log_workflow_run
+from analytics import log_alert, log_workflow_run, log_games_monitored, log_prediction_accuracy
 
 SLACK_WEBHOOK = os.environ.get('SLACK_WEBHOOK')
 WEATHER_API_KEY = os.environ.get('WEATHER_API_KEY')
@@ -112,12 +112,12 @@ def get_venue_roof_info(venue_name):
     }
 
     retractable_roofs = {
-        'Chase Field':          {'has_roof': True, 'type': 'retractable'},
-        'loanDepot park':       {'has_roof': True, 'type': 'retractable'},
-        'Globe Life Field':     {'has_roof': True, 'type': 'retractable'},
-        'Minute Maid Park':     {'has_roof': True, 'type': 'retractable'},
-        'T-Mobile Park':        {'has_roof': True, 'type': 'retractable'},
-        'American Family Field':{'has_roof': True, 'type': 'retractable'}
+        'Chase Field':           {'has_roof': True, 'type': 'retractable'},
+        'loanDepot park':        {'has_roof': True, 'type': 'retractable'},
+        'Globe Life Field':      {'has_roof': True, 'type': 'retractable'},
+        'Minute Maid Park':      {'has_roof': True, 'type': 'retractable'},
+        'T-Mobile Park':         {'has_roof': True, 'type': 'retractable'},
+        'American Family Field': {'has_roof': True, 'type': 'retractable'}
     }
 
     if venue_name in fixed_domes:
@@ -131,7 +131,8 @@ def get_venue_roof_info(venue_name):
 def get_roof_status_from_mlb(game_date, venue_name):
     """
     Check if retractable roof is open/closed for games today.
-    Returns: True if should alert (roof confirmed open), False if roof closed or unknown
+    Returns: True if should alert (roof confirmed open),
+             False if roof closed or unknown
     """
     url = f"https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={game_date}&hydrate=venue"
 
@@ -257,7 +258,8 @@ def build_high_risk_message(high_risk_games):
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": f"*{len(high_risk_games)} game(s) at HIGH RISK* requiring attention for daypart/guide adjustments"
+                    "text": f"*{len(high_risk_games)} game(s) at HIGH RISK* requiring attention "
+                            f"for daypart/guide adjustments"
                 }
             },
             {
@@ -279,7 +281,9 @@ def build_high_risk_message(high_risk_games):
         game = game_data['game']
         weather = game_data['weather']
 
-        game_datetime = datetime.strptime(f"{game['date']} {game['time']}", "%Y-%m-%d %H:%M")
+        game_datetime = datetime.strptime(
+            f"{game['date']} {game['time']}", "%Y-%m-%d %H:%M"
+        )
         date_str = game_datetime.strftime("%A, %B %d")
         time_str = game_datetime.strftime("%I:%M %p")
 
@@ -379,7 +383,9 @@ def main():
 
         upcoming_count = 0
         for game in games_to_check:
-            game_datetime = datetime.strptime(f"{game['date']} {game['time']}", "%Y-%m-%d %H:%M")
+            game_datetime = datetime.strptime(
+                f"{game['date']} {game['time']}", "%Y-%m-%d %H:%M"
+            )
 
             if now.replace(tzinfo=None) <= game_datetime <= now.replace(tzinfo=None) + timedelta(hours=48):
                 upcoming_count += 1
@@ -403,6 +409,9 @@ def main():
 
         print(f"\n📊 Found {len(high_risk_games)} high-risk game(s) out of {upcoming_count} total")
 
+        # ✅ Log games monitored for accurate analytics dashboard
+        log_games_monitored(upcoming_count)
+
         # ✅ Save predictions for accuracy tracking before posting
         if high_risk_games:
             save_high_risk_predictions(high_risk_games, now.strftime('%Y-%m-%d'))
@@ -412,11 +421,9 @@ def main():
         if post_to_slack(message):
             if high_risk_games:
                 print(f"✅ High-risk alert posted for {len(high_risk_games)} game(s)")
-                log_alert('high_risk')
             else:
                 print("✅ All-clear message posted")
-                log_alert('high_risk')
-
+            log_alert('high_risk')
             log_workflow_run('success')
         else:
             print("❌ Failed to post to Slack")
