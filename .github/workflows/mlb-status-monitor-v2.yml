@@ -55,10 +55,10 @@ jobs:
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add game_states.json analytics.json ANALYTICS.md 2>/dev/null || true
+          # ✅ Include high_risk_predictions.json for accuracy tracking
+          git add game_states.json high_risk_predictions.json analytics.json ANALYTICS.md 2>/dev/null || true
           git diff --quiet && git diff --staged --quiet || \
             git commit -m "📊 Update game states and analytics [skip ci]"
           # ✅ FIX 3: Rebase before push to handle concurrent run conflicts
-          #           instead of silently swallowing failures with || true
           git pull --rebase origin main || true
           git push || echo "⚠️ WARNING: Push failed — game state may not persist to next run"
