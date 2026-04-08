@@ -3,18 +3,18 @@ import json
 import requests
 from datetime import datetime
 import pytz
-from analytics import log_alert, log_workflow_run
+from analytics import log_alert, log_workflow_run, log_prediction_accuracy
 
 SLACK_WEBHOOK = os.environ.get('SLACK_WEBHOOK')
 STATE_FILE = 'game_states.json'
 
-# ─── Normalized state constants ───────────────────────────────────────────────
-STATE_DELAYED    = "DELAYED"
-STATE_POSTPONED  = "POSTPONED"
-STATE_LIVE       = "LIVE"
-STATE_FINAL      = "FINAL"
-STATE_PREVIEW    = "PREVIEW"
-STATE_SUSPENDED  = "SUSPENDED"
+# ── Normalized state constants ─────────────────────────────────────────────────
+STATE_DELAYED   = "DELAYED"
+STATE_POSTPONED = "POSTPONED"
+STATE_LIVE      = "LIVE"
+STATE_FINAL     = "FINAL"
+STATE_PREVIEW   = "PREVIEW"
+STATE_SUSPENDED = "SUSPENDED"
 
 def load_games():
     with open('config.json', 'r') as f:
@@ -49,12 +49,12 @@ def get_venue_roof_type(venue_name):
         'Rogers Centre':   {'type': 'fixed_dome', 'description': '🏟️ Fixed Dome'}
     }
     retractable_roofs = {
-        'Chase Field':          {'type': 'retractable', 'description': '🔄 Retractable Roof'},
-        'loanDepot park':       {'type': 'retractable', 'description': '🔄 Retractable Roof'},
-        'Globe Life Field':     {'type': 'retractable', 'description': '🔄 Retractable Roof'},
-        'Minute Maid Park':     {'type': 'retractable', 'description': '🔄 Retractable Roof'},
-        'T-Mobile Park':        {'type': 'retractable', 'description': '🔄 Retractable Roof'},
-        'American Family Field':{'type': 'retractable', 'description': '🔄 Retractable Roof'}
+        'Chase Field':           {'type': 'retractable', 'description': '🔄 Retractable Roof'},
+        'loanDepot park':        {'type': 'retractable', 'description': '🔄 Retractable Roof'},
+        'Globe Life Field':      {'type': 'retractable', 'description': '🔄 Retractable Roof'},
+        'Minute Maid Park':      {'type': 'retractable', 'description': '🔄 Retractable Roof'},
+        'T-Mobile Park':         {'type': 'retractable', 'description': '🔄 Retractable Roof'},
+        'American Family Field': {'type': 'retractable', 'description': '🔄 Retractable Roof'}
     }
     if venue_name in fixed_domes:
         return fixed_domes[venue_name]
@@ -81,26 +81,26 @@ def get_mlb_game_status(game_date):
                     abstract_state = status['abstractGameState']
                     reason         = status.get('reason', '')
 
-                    venue_info   = get_venue_info_from_game(game)
-                    linescore    = game.get('linescore', {})
-                    away_score   = game['teams']['away'].get('score', 0)
-                    home_score   = game['teams']['home'].get('score', 0)
+                    venue_info     = get_venue_info_from_game(game)
+                    linescore      = game.get('linescore', {})
+                    away_score     = game['teams']['away'].get('score', 0)
+                    home_score     = game['teams']['home'].get('score', 0)
                     current_inning = linescore.get('currentInning', None)
                     inning_state   = linescore.get('inningState', '')
 
                     games_status.append({
-                        'game_pk':       game_pk,
-                        'matchup':       f"{away_team} vs {home_team}",
-                        'away_team':     away_team,
-                        'home_team':     home_team,
-                        'away_score':    away_score,
-                        'home_score':    home_score,
-                        'inning':        current_inning,
-                        'inning_state':  inning_state,
-                        'detailed_state':detailed_state,
-                        'abstract_state':abstract_state,
-                        'reason':        reason,
-                        'venue':         venue_info
+                        'game_pk':        game_pk,
+                        'matchup':        f"{away_team} vs {home_team}",
+                        'away_team':      away_team,
+                        'home_team':      home_team,
+                        'away_score':     away_score,
+                        'home_score':     home_score,
+                        'inning':         current_inning,
+                        'inning_state':   inning_state,
+                        'detailed_state': detailed_state,
+                        'abstract_state': abstract_state,
+                        'reason':         reason,
+                        'venue':          venue_info
                     })
         return games_status
     except Exception as e:
@@ -110,25 +110,25 @@ def get_mlb_game_status(game_date):
 def is_weather_related(reason, detailed_state):
     """
     Check if a delay/postponement is weather-related.
-    NOTE: Does NOT include 'postponed' as a keyword — postponed is a separate
-    state, not a delay type.
+    Does NOT include 'postponed' as a keyword — postponed is a
+    separate state, not a delay type.
     """
-    reason_lower = detailed_state.lower() + ' ' + reason.lower()
-    weather_keywords = ['rain', 'weather', 'storm', 'lightning', 'inclement', 'wind', 'snow', 'fog']
-    return any(keyword in reason_lower for keyword in weather_keywords)
+    combined = detailed_state.lower() + ' ' + reason.lower()
+    weather_keywords = ['rain', 'weather', 'storm', 'lightning',
+                        'inclement', 'wind', 'snow', 'fog']
+    return any(keyword in combined for keyword in weather_keywords)
 
 def is_active_weather_delay(game_status):
     """
-    Returns True ONLY if the game is in an active in-game delay (not postponed).
-    Postponed is handled separately.
+    Returns True ONLY if the game is in an active in-game weather delay.
+    Explicitly excludes Postponed and Suspended states.
     """
     state = game_status['detailed_state'].lower()
 
-    # ✅ FIX: Postponed is explicitly excluded — it is NOT a "delay"
+    # Postponed/suspended are handled separately — never treat as a delay
     if 'postponed' in state or 'suspend' in state:
         return False
 
-    # Only match actual delay states
     is_delayed = 'delay' in state or 'delayed' in state
     return is_delayed and is_weather_related(
         game_status['reason'], game_status['detailed_state']
@@ -145,7 +145,7 @@ def is_suspended(game_status):
 def normalize_api_state(game_status):
     """
     Convert raw MLB API state to our normalized internal state constant.
-    This ensures consistent comparisons in monitor_games().
+    Ensures consistent comparisons throughout monitor_games().
     """
     detailed = game_status['detailed_state'].lower()
     abstract = game_status['abstract_state']
@@ -160,14 +160,77 @@ def normalize_api_state(game_status):
         return STATE_LIVE
     if abstract == 'Final':
         return STATE_FINAL
-    return STATE_PREVIEW  # Pre-game / scheduled
+    return STATE_PREVIEW
+
+def check_and_log_prediction_accuracy(game_pk, game_date):
+    """
+    When an actual delay/postponement occurs, check if we predicted it
+    and log the accuracy result to analytics.
+    Called every time a DELAY or POSTPONED alert fires.
+    """
+    predictions_file = 'high_risk_predictions.json'
+
+    try:
+        with open(predictions_file, 'r') as f:
+            predictions = json.load(f)
+
+        today_predictions = predictions.get(game_date, {})
+        was_predicted = str(game_pk) in today_predictions
+
+        log_prediction_accuracy(
+            predicted_delay=was_predicted,
+            actual_delay=True
+        )
+
+        if was_predicted:
+            print(f"📊 Accuracy logged: ✅ TRUE POSITIVE — predicted and delay occurred")
+        else:
+            print(f"📊 Accuracy logged: ❌ FALSE NEGATIVE — delay occurred but not predicted")
+
+    except FileNotFoundError:
+        # No predictions file — high risk alert hasn't run yet today
+        log_prediction_accuracy(predicted_delay=False, actual_delay=True)
+        print(f"📊 Accuracy logged: ❌ FALSE NEGATIVE — no predictions on file for today")
+
+def check_and_log_false_positives(game_date):
+    """
+    At end of monitoring cycle, any game we predicted as high risk
+    that never got a delay/postponement is a false positive.
+    Called once at the end of monitor_games().
+    """
+    predictions_file = 'high_risk_predictions.json'
+
+    try:
+        with open(predictions_file, 'r') as f:
+            predictions = json.load(f)
+
+        today_predictions = predictions.get(game_date, {})
+
+        if not today_predictions:
+            return
+
+        states = load_game_states()
+
+        for game_pk in today_predictions:
+            state = states.get(str(game_pk), {}).get('state', '')
+            game_actually_delayed = state in [STATE_DELAYED, STATE_POSTPONED, STATE_SUSPENDED]
+
+            if not game_actually_delayed:
+                log_prediction_accuracy(
+                    predicted_delay=True,
+                    actual_delay=False
+                )
+                print(f"📊 Accuracy logged: ❌ FALSE POSITIVE — predicted delay but game played normally (pk: {game_pk})")
+
+    except FileNotFoundError:
+        pass  # No predictions file = nothing to check
 
 def format_score_inning(game_status):
-    away       = game_status['away_team']
-    home       = game_status['home_team']
-    away_score = game_status['away_score']
-    home_score = game_status['home_score']
-    inning     = game_status['inning']
+    away         = game_status['away_team']
+    home         = game_status['home_team']
+    away_score   = game_status['away_score']
+    home_score   = game_status['home_score']
+    inning       = game_status['inning']
     inning_state = game_status['inning_state']
 
     score_text = f"{away} {away_score}, {home} {home_score}"
@@ -218,7 +281,11 @@ def send_delay_alert(game_status, alert_type):
         "blocks": [
             {
                 "type": "header",
-                "text": {"type": "plain_text", "text": f"{emoji} {title}", "emoji": True}
+                "text": {
+                    "type": "plain_text",
+                    "text": f"{emoji} {title}",
+                    "emoji": True
+                }
             },
             {
                 "type": "section",
@@ -237,7 +304,6 @@ def send_delay_alert(game_status, alert_type):
         ]
     }
 
-    # Score/inning for in-game delays and resumptions only
     score_text, inning_text = format_score_inning(game_status)
     if score_text and alert_type in [STATE_DELAYED, "RESUME"]:
         message["blocks"].append({
@@ -251,7 +317,10 @@ def send_delay_alert(game_status, alert_type):
     if game_status['reason']:
         message["blocks"].append({
             "type": "section",
-            "text": {"type": "mrkdwn", "text": f"*Reason:* {game_status['reason']}"}
+            "text": {
+                "type": "mrkdwn",
+                "text": f"*Reason:* {game_status['reason']}"
+            }
         })
 
     if venue.get('roof_type') in ['fixed_dome', 'retractable']:
@@ -268,7 +337,12 @@ def send_delay_alert(game_status, alert_type):
 
     message["blocks"].append({
         "type": "context",
-        "elements": [{"type": "mrkdwn", "text": f"<!channel> Alert sent at {now.strftime('%I:%M %p')} PT"}]
+        "elements": [
+            {
+                "type": "mrkdwn",
+                "text": f"<!channel> Alert sent at {now.strftime('%I:%M %p')} PT"
+            }
+        ]
     })
 
     response = requests.post(SLACK_WEBHOOK, json=message)
@@ -308,25 +382,21 @@ def monitor_games():
         game_pk        = str(game['game_pk'])
         venue_name     = game['venue']['name']
         previous_entry = previous_states.get(game_pk, {})
-        previous_state = previous_entry.get('state')   # Our normalized constant or None
+        previous_state = previous_entry.get('state')
 
-        # ── Normalize current API state to our constants ──────────────────────
         current_normalized = normalize_api_state(game)
 
         if previous_state is None:
             print(f"   🔍 First seen: {game['matchup']} at {venue_name} "
                   f"({game['venue']['roof_description']}) — state: {current_normalized}")
 
-        # ─────────────────────────────────────────────────────────────────────
-        # 🔴 FIX: Check POSTPONED first — before delay check — to avoid
-        #         mislabeling a postponed game as a "RAIN DELAY"
-        # ─────────────────────────────────────────────────────────────────────
-
+        # ── Check order: POSTPONED first, then SUSPENDED, then DELAY, then RESUME
         if is_postponed(game) and previous_state != STATE_POSTPONED:
-            # Game just became postponed (or first time we've seen it postponed)
             print(f"📅 POSTPONED: {game['matchup']} at {venue_name}")
             if is_weather_related(game['reason'], game['detailed_state']):
                 send_delay_alert(game, STATE_POSTPONED)
+                # ✅ Log prediction accuracy for actual postponement
+                check_and_log_prediction_accuracy(game_pk, today)
             else:
                 print(f"   ℹ️  Non-weather postponement — skipping alert")
             current_states[game_pk] = {'state': STATE_POSTPONED, 'matchup': game['matchup']}
@@ -337,24 +407,26 @@ def monitor_games():
             current_states[game_pk] = {'state': STATE_SUSPENDED, 'matchup': game['matchup']}
 
         elif is_active_weather_delay(game) and previous_state != STATE_DELAYED:
-            # Active in-game rain delay (NOT postponed)
             print(f"🚨 RAIN DELAY: {game['matchup']} at {venue_name}")
             send_delay_alert(game, STATE_DELAYED)
+            # ✅ Log prediction accuracy for actual rain delay
+            check_and_log_prediction_accuracy(game_pk, today)
             current_states[game_pk] = {'state': STATE_DELAYED, 'matchup': game['matchup']}
 
         elif previous_state == STATE_DELAYED and current_normalized == STATE_LIVE:
-            # Delay lifted, game resuming
             print(f"✅ RESUMING: {game['matchup']} at {venue_name}")
             send_delay_alert(game, "RESUME")
             current_states[game_pk] = {'state': STATE_LIVE, 'matchup': game['matchup']}
 
         else:
-            # No change — preserve state exactly as stored
             current_states[game_pk] = {
                 'state':   previous_state if previous_state else current_normalized,
                 'matchup': game['matchup']
             }
             print(f"   ✅ No change: {game['matchup']} — {current_normalized}")
+
+    # ✅ Check for false positives on games that finished without a delay
+    check_and_log_false_positives(today)
 
     save_game_states(current_states)
     print(f"\n✅ Monitoring complete — checked {len(games)} games")
