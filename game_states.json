@@ -1,26 +1,62 @@
 {
-  "823884": {
-    "state": "LIVE",
-    "matchup": "Cincinnati Reds vs Miami Marlins"
-  },
-  "823565": {
-    "state": "LIVE",
-    "matchup": "Athletics vs New York Yankees"
-  },
-  "823724": {
-    "state": "LIVE",
-    "matchup": "Detroit Tigers vs Minnesota Twins"
-  },
-  "823645": {
+  "824695": {
     "state": "PREVIEW",
-    "matchup": "Arizona Diamondbacks vs New York Mets"
+    "matchup": "Pittsburgh Pirates vs Chicago Cubs"
   },
-  "824130": {
+  "823482": {
+    "state": "PREVIEW",
+    "matchup": "Arizona Diamondbacks vs Philadelphia Phillies"
+  },
+  "824297": {
+    "state": "PREVIEW",
+    "matchup": "Miami Marlins vs Detroit Tigers"
+  },
+  "824534": {
+    "state": "PREVIEW",
+    "matchup": "Los Angeles Angels vs Cincinnati Reds"
+  },
+  "822829": {
+    "state": "PREVIEW",
+    "matchup": "Minnesota Twins vs Toronto Blue Jays"
+  },
+  "823643": {
+    "state": "PREVIEW",
+    "matchup": "Athletics vs New York Mets"
+  },
+  "822997": {
+    "state": "PREVIEW",
+    "matchup": "New York Yankees vs Tampa Bay Rays"
+  },
+  "824858": {
+    "state": "PREVIEW",
+    "matchup": "San Francisco Giants vs Baltimore Orioles"
+  },
+  "824941": {
+    "state": "PREVIEW",
+    "matchup": "Cleveland Guardians vs Atlanta Braves"
+  },
+  "824128": {
     "state": "PREVIEW",
     "matchup": "Chicago White Sox vs Kansas City Royals"
   },
-  "823319": {
+  "823808": {
+    "state": "PREVIEW",
+    "matchup": "Washington Nationals vs Milwaukee Brewers"
+  },
+  "823076": {
+    "state": "PREVIEW",
+    "matchup": "Boston Red Sox vs St. Louis Cardinals"
+  },
+  "823318": {
     "state": "PREVIEW",
     "matchup": "Colorado Rockies vs San Diego Padres"
+  },
+  "823156": {
+    "state": "PREVIEW",
+    "matchup": "Houston Astros vs Seattle Mariners"
+  },
+  "823968": {
+    "state": "PREVIEW",
+    "matchup": "Texas Rangers vs Los Angeles Dodgers"
   }
 }
