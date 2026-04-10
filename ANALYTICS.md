@@ -7,7 +7,7 @@
 ## 🟢 CURRENT PERFORMANCE
 
 **Status:** Fully Operational
-**Last Updated:** April 10, 2026 06:46 AM PT
+**Last Updated:** April 10, 2026 07:17 AM PT
 **Season:** Regular Season 2026
 
 ---
@@ -16,9 +16,9 @@
 
 | Metric | Count |
 |--------|-------|
-| 📅 Games Monitored | 5 |
-| 📬 Total Alerts Sent | 43 |
-| 📊 Daily Reports | 1 |
+| 📅 Games Monitored | 15 |
+| 📬 Total Alerts Sent | 44 |
+| 📊 Daily Reports | 2 |
 | 🚨 High-Risk Alerts | 14 |
 | ⏸️ Delay Alerts | 16 |
 | ▶️ Resumption Alerts | 3 |
@@ -42,12 +42,12 @@
 
 | Metric | Count | Percentage |
 |--------|-------|------------|
-| Total Workflow Runs | 156 | - |
-| ✅ Successful | 139 | 89.1% |
+| Total Workflow Runs | 157 | - |
+| ✅ Successful | 140 | 89.2% |
 | ❌ Failed | 0 | 0.0% |
-| ⏭️ Skipped (outside game hours) | 17 | 10.9% |
+| ⏭️ Skipped (outside game hours) | 17 | 10.8% |
 
-**System Uptime:** 89.1%
+**System Uptime:** 89.2%
 
 ---
 
@@ -55,8 +55,8 @@
 
 ### Today (April 10, 2026)
 
-- 📊 Alerts sent: 0
-- 📅 Games monitored: 0
+- 📊 Alerts sent: 1
+- 📅 Games monitored: 10
 
 ### Yesterday (April 09, 2026)
 
@@ -68,11 +68,11 @@
 ## 💡 Key Insights
 
 **Time Saved:** ~11 hours this season
-**Estimated Value:** $538 in operational efficiency
+**Estimated Value:** $550 in operational efficiency
 
-**Days Active:** 14
-**Active Game Days:** 14
-**Average Alerts/Day (game days only):** 3.1
+**Days Active:** 15
+**Active Game Days:** 15
+**Average Alerts/Day (game days only):** 2.9
 
 ---
 
@@ -84,4 +84,4 @@ This file is automatically updated by `analytics.py` after each workflow run.
 
 ---
 
-_Last generated: April 10, 2026 06:46 AM PT_
+_Last generated: April 10, 2026 07:17 AM PT_
