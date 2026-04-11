@@ -7,7 +7,7 @@
 ## 🟢 CURRENT PERFORMANCE
 
 **Status:** Fully Operational
-**Last Updated:** April 10, 2026 10:08 PM PT
+**Last Updated:** April 10, 2026 11:11 PM PT
 **Season:** Regular Season 2026
 
 ---
@@ -42,12 +42,12 @@
 
 | Metric | Count | Percentage |
 |--------|-------|------------|
-| Total Workflow Runs | 174 | - |
-| ✅ Successful | 153 | 87.9% |
+| Total Workflow Runs | 175 | - |
+| ✅ Successful | 153 | 87.4% |
 | ❌ Failed | 0 | 0.0% |
-| ⏭️ Skipped (outside game hours) | 21 | 12.1% |
+| ⏭️ Skipped (outside game hours) | 22 | 12.6% |
 
-**System Uptime:** 87.9%
+**System Uptime:** 87.4%
 
 ---
 
@@ -84,4 +84,4 @@ This file is automatically updated by `analytics.py` after each workflow run.
 
 ---
 
-_Last generated: April 10, 2026 10:08 PM PT_
+_Last generated: April 10, 2026 11:11 PM PT_
