@@ -6,6 +6,80 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
+## [1.5.0] - 2026-04-16
+
+### ✨ Added
+
+#### `analytics.py` — Auto-Generate `STATUS.md`
+- **New function `generate_status_markdown()`**: Automatically
+  regenerates `STATUS.md` with current timestamp and live metrics
+  from `analytics.json` after every workflow run — ensures
+  Last Updated date never goes stale again
+  - Pulls live metrics directly: Games Monitored, Total Alerts,
+    Prediction Accuracy, False Positives, System Uptime
+  - Component Health table auto-updates with today and tomorrow
+    dates on every run
+  - External Cron Trigger row added to Component Health table
+  - Full System Architecture table included
+- **`save_analytics()` updated**: Now calls both
+  `generate_analytics_markdown()` and `generate_status_markdown()`
+  on every save — both files always stay in sync
+- **`__main__` block updated**: Running `python analytics.py`
+  directly now also regenerates both `ANALYTICS.md` and
+  `STATUS.md`
+
+#### All Three Workflows — `STATUS.md` Auto-Commit
+- Added `git add STATUS.md || true` to all active run and
+  skipped run commit steps in all three workflow files so
+  `STATUS.md` is committed back to the repo after every run
+  - `mlb-status-monitor-v2.yml` — both commit steps updated
+  - `high-risk-alert-v2.yml` — both commit steps updated
+  - `weather-update-v2.yml` — both commit steps updated
+
+#### `STATUS.md` — Recent Activity History
+- Added full Recent Activity section documenting all changes
+  from system launch (March 12, 2026) through April 16, 2026
+- Added External Cron Trigger row to Component Health table
+- Added Live Performance Metrics section pulling from
+  `analytics.json`
+- Added System Architecture table documenting all layers
+- Updated Next Scheduled Review to May 1, 2026
+
+### 🔧 Changed
+
+#### `analytics.py`
+- `save_analytics()` now calls `generate_status_markdown()`
+  in addition to `generate_analytics_markdown()` — one save
+  updates all three files: `analytics.json`, `ANALYTICS.md`,
+  `STATUS.md`
+- Docstring updated to reflect `STATUS.md` is now also
+  auto-generated
+
+#### `STATUS.md`
+- Last Updated now auto-populates from `analytics.py` on
+  every workflow run — no longer manually maintained
+- Live Performance Metrics now sourced directly from
+  `analytics.json` — always accurate and real-time
+- Component Health dates now auto-update daily
+
+### 🎯 Impact
+- **`STATUS.md` never goes stale** — auto-updates on every
+  workflow run just like `ANALYTICS.md`
+- **Live metrics in STATUS.md** — Games Monitored, Alerts Sent,
+  Prediction Accuracy, Uptime all update automatically
+- **Zero manual maintenance required** — all three markdown
+  files now fully automated
+
+### 📊 Auto-Update Coverage (After Fix)
+
+| File | Updated By | Frequency |
+|---|---|---|
+| `analytics.json` | Every workflow run | Real-time |
+| `ANALYTICS.md` | `save_analytics()` | Real-time |
+| `STATUS.md` | `save_analytics()` ✅ NEW | Real-time |
+
+---
+
 ## [1.4.0] - 2026-04-16
 
 ### ✨ Added
@@ -86,7 +160,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
   `git diff --quiet && git diff --staged --quiet` then detected
   unstaged working directory changes and exited with code 1,
   failing the entire job
-- **Symptom:** GitHub Actions showed red on
+- **Symptom:** GitHub Actions showed red ❌ on
   **"Commit game state tracking and analytics"** step with:
   no changes added to commit — Error: Process completed with
   exit code 1 — even though `ANALYTICS.md`, `analytics.json`,
@@ -106,7 +180,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ### 🎯 Impact
 - **Commit step no longer fails the job** — GitHub Actions run
-  shows green on all steps
+  shows green ✅ on all steps
 - **No impact on Slack alerting** — purely a workflow reliability
   fix
 - **State and analytics now reliably committed** every run without
