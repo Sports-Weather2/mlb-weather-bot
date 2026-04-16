@@ -12,11 +12,8 @@ jobs:
       - uses: actions/checkout@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          # ✅ Always fetch full history so git pull gets latest state
           fetch-depth: 0
 
-      # ✅ Pull latest commits AFTER checkout so game_states.json
-      #    reflects what the previous run saved
       - name: Pull latest state from repo
         run: |
           git pull --rebase origin main || true
@@ -49,8 +46,6 @@ jobs:
           SLACK_WEBHOOK: ${{ secrets.HIGH_RISK_WEBHOOK_URL }}
         run: python mlb_game_status_monitor.py
 
-      # ✅ Log skipped runs outside game hours so total run
-      #    count and skipped count are accurately tracked
       - name: Log skipped run outside game hours
         if: steps.check_time.outputs.should_run == 'false'
         run: python -c "from analytics import log_workflow_run; log_workflow_run('skipped')"
@@ -60,31 +55,24 @@ jobs:
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          # ✅ FIX: Stage each file individually so failures don't
-          #         silently block other files from being staged
           git add game_states.json || true
           git add high_risk_predictions.json || true
           git add analytics.json || true
           git add ANALYTICS.md || true
-          # ✅ FIX: || true on commit prevents exit code 1 from
-          #         failing the job when there are no changes to commit
+          git add STATUS.md || true
           git diff --staged --quiet || \
             git commit -m "📊 Update game states and analytics [skip ci]" || true
-          # ✅ Rebase before push to handle concurrent run conflicts
           git pull --rebase origin main || true
           git push || echo "⚠️ WARNING: Push failed — game state may not persist to next run"
 
-      # ✅ Commit analytics even on skipped runs so skipped count persists
       - name: Commit analytics for skipped run
         if: steps.check_time.outputs.should_run == 'false'
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          # ✅ FIX: Stage each file individually
           git add analytics.json || true
           git add ANALYTICS.md || true
-          # ✅ FIX: || true on commit prevents exit code 1 from
-          #         failing the job when there are no changes to commit
+          git add STATUS.md || true
           git diff --staged --quiet || \
             git commit -m "📊 Update analytics (skipped run) [skip ci]" || true
           git pull --rebase origin main || true
