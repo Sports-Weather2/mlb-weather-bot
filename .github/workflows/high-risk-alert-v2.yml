@@ -47,8 +47,7 @@ jobs:
       - name: Send High-risk alerts
         if: steps.check_already_ran.outputs.already_ran == 'false'
         env:
-          SLACK_WEBHOOK: ${{ secrets.HIGH_RISK_WEBHOOK_URL }}
-          WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
+          SLACK_WEBHOOK: ${{ secrets.HIGH_RISK_WEBHOOK_URL }}  # ✅ WEATHER_API_KEY removed
         run: python high_risk_alert.py
 
       - name: Mark as ran today
@@ -71,6 +70,7 @@ jobs:
           git add last_high_risk_run.txt .github/.highrisk-keep-alive || true
           git add analytics.json ANALYTICS.md 2>/dev/null || true
           git add STATUS.md || true
+          git add high_risk_predictions.json || true  # ✅ ADDED — critical for accuracy tracking
           git diff --quiet && git diff --staged --quiet || \
             git commit -m "📊 Update analytics and tracking [skip ci]"
           git pull --rebase origin main || true
