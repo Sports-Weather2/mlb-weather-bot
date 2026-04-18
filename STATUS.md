@@ -31,11 +31,11 @@
 
 | Metric | Value |
 |--------|-------|
-| **Games Monitored** | 78 |
-| **Total Alerts Sent** | 69 |
+| **Games Monitored** | 88 |
+| **Total Alerts Sent** | 70 |
 | **Delay Prediction Accuracy** | 0.0% (0/0) |
 | **False Positives** | 0 |
-| **System Uptime** | 64.4% |
+| **System Uptime** | 64.5% |
 | **Monitoring Interval** | Every 10 min (via cron-job.org) |
 
 ---
