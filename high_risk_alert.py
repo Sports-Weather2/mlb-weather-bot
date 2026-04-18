@@ -30,7 +30,7 @@ NWS_POINTS_URL = "https://api.weather.gov/points/{lat},{lon}"
 STADIUM_COORDINATES = {
     # Fixed Dome — always excluded
     'St Petersburg,US':  {'lat': 27.7683, 'lon': -82.6534, 'roof': 'fixed'},
-    'Toronto,CA':        {'lat': 43.6414, 'lon': -79.3894, 'roof': 'fixed'},  # Rogers Centre always closed
+    'Toronto,CA':        {'lat': 43.6414, 'lon': -79.3894, 'roof': 'fixed'},
 
     # Retractable Roof — check MLB API
     'Phoenix,US':        {'lat': 33.4453, 'lon': -112.0667, 'roof': 'retractable'},
@@ -87,10 +87,10 @@ STADIUM_COORDINATES = {
 # ─────────────────────────────────────────────────────────────
 IMPACT_RULES = {
     'high_risk': {
-        'rain_prob':    75,        # was 70% — tightened for NWS precision
+        'rain_prob':    75,
         'wind_gust':    30,
         'lightning':    True,
-        'temp_extreme': [35, 100]  # was [20,100] — tightened cold threshold
+        'temp_extreme': [35, 100]
     }
 }
 
@@ -104,10 +104,6 @@ def load_games():
 
 
 def save_high_risk_predictions(high_risk_games, game_date):
-    """
-    Save today's high-risk predictions for accuracy tracking.
-    Unchanged — still works the same way.
-    """
     predictions_file = 'high_risk_predictions.json'
     try:
         with open(predictions_file, 'r') as f:
@@ -128,7 +124,6 @@ def save_high_risk_predictions(high_risk_games, game_date):
 
 
 def get_venue_name_from_location(location):
-    """Map location string to official venue name for roof lookup"""
     location_to_venue = {
         'Phoenix,US':         'Chase Field',
         'Miami,US':           'loanDepot park',
@@ -177,13 +172,9 @@ def get_venue_name_from_location(location):
 
 
 def get_venue_roof_info(venue_name):
-    """
-    Determine if venue has a roof and its type.
-    Toronto (Rogers Centre) is fixed dome — roof always closed.
-    """
     fixed_domes = {
         'Tropicana Field': {'has_roof': True, 'type': 'fixed', 'should_alert': False},
-        'Rogers Centre':   {'has_roof': True, 'type': 'fixed', 'should_alert': False}  # Always closed
+        'Rogers Centre':   {'has_roof': True, 'type': 'fixed', 'should_alert': False}
     }
     retractable_roofs = {
         'Chase Field':           {'has_roof': True, 'type': 'retractable'},
@@ -201,7 +192,6 @@ def get_venue_roof_info(venue_name):
 
 
 def get_roof_status_from_mlb(game_date, venue_name):
-    """Check if retractable roof is open/closed via MLB Stats API. Unchanged."""
     url = f"https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={game_date}&hydrate=venue"
     try:
         response = requests.get(url, timeout=5)
@@ -230,10 +220,9 @@ def get_roof_status_from_mlb(game_date, venue_name):
 
 
 # ─────────────────────────────────────────────────────────────
-# NWS WEATHER FETCH — replaces get_weather_forecast()
+# NWS WEATHER FETCH
 # ─────────────────────────────────────────────────────────────
 def get_nws_hourly_forecast_url(lat, lon):
-    """Step 1: Get NWS gridpoint hourly forecast URL for a lat/lon."""
     url = NWS_POINTS_URL.format(lat=lat, lon=lon)
     headers = {
         'User-Agent': NWS_USER_AGENT,
@@ -249,21 +238,14 @@ def get_nws_hourly_forecast_url(lat, lon):
 
 
 def get_weather_forecast(location, game_datetime):
-    """
-    Fetch NWS hourly weather for the exact game start hour.
-    Drop-in replacement for OpenWeatherMap get_weather_forecast().
-    Returns same dict structure so all downstream code works unchanged.
-    """
     if location not in STADIUM_COORDINATES:
         raise ValueError(f"No coordinates found for location: {location}")
 
     coords = STADIUM_COORDINATES[location]
     lat, lon = coords['lat'], coords['lon']
 
-    # Step 1: Get NWS hourly forecast URL
     hourly_url, tz_name = get_nws_hourly_forecast_url(lat, lon)
 
-    # Step 2: Fetch hourly periods
     headers = {
         'User-Agent': NWS_USER_AGENT,
         'Accept': 'application/geo+json'
@@ -272,7 +254,6 @@ def get_weather_forecast(location, game_datetime):
     resp.raise_for_status()
     periods = resp.json()['properties']['periods']
 
-    # Step 3: Convert game_datetime to stadium local time for matching
     stadium_tz = pytz.timezone(tz_name)
     if game_datetime.tzinfo is None:
         pt = pytz.timezone('America/Los_Angeles')
@@ -280,7 +261,6 @@ def get_weather_forecast(location, game_datetime):
     else:
         game_local = game_datetime.astimezone(stadium_tz)
 
-    # Step 4: Find the hourly period that matches game start exactly
     best_period = None
     for period in periods:
         period_start = datetime.fromisoformat(period['startTime'])
@@ -289,7 +269,6 @@ def get_weather_forecast(location, game_datetime):
             best_period = period
             break
 
-    # Fallback: closest period within ±1 hour
     if not best_period:
         closest      = None
         closest_diff = float('inf')
@@ -304,7 +283,6 @@ def get_weather_forecast(location, game_datetime):
     if not best_period:
         raise ValueError(f"No NWS forecast period found for {location} at {game_local}")
 
-    # Step 5: Parse wind speed — NWS returns "12 mph" or "10 to 15 mph"
     wind_str = best_period.get('windSpeed', '0 mph')
     try:
         wind_parts = [int(p) for p in wind_str.replace('mph', '').split('to') if p.strip().isdigit()]
@@ -312,15 +290,12 @@ def get_weather_forecast(location, game_datetime):
     except Exception:
         wind_speed = 0
 
-    # Step 6: Parse precipitation probability
     pop_data  = best_period.get('probabilityOfPrecipitation', {})
     rain_prob = pop_data.get('value') if isinstance(pop_data, dict) else 0
-    rain_prob = rain_prob or 0  # handle None
+    rain_prob = rain_prob or 0
 
-    # Step 7: Temperature
     temp = best_period.get('temperature', 72)
 
-    # Step 8: Thunderstorm detection
     short_forecast    = best_period.get('shortForecast', '')
     detailed_forecast = best_period.get('detailedForecast', '')
     combined = (short_forecast + ' ' + detailed_forecast).lower()
@@ -331,22 +306,21 @@ def get_weather_forecast(location, game_datetime):
 
     return {
         'temp':             temp,
-        'feels_like':       temp,       # NWS free tier doesn't provide feels_like
+        'feels_like':       temp,
         'rain_prob':        rain_prob,
         'conditions':       short_forecast,
         'wind_speed':       wind_speed,
-        'wind_gust':        wind_speed, # NWS hourly doesn't separate gust
-        'humidity':         0,          # NWS hourly doesn't include humidity
+        'wind_gust':        wind_speed,
+        'humidity':         0,
         'has_thunderstorm': has_thunderstorm,
         'nws_period_start': best_period.get('startTime', '')
     }
 
 
 # ─────────────────────────────────────────────────────────────
-# RISK CHECK — threshold updated to match new IMPACT_RULES
+# RISK CHECK
 # ─────────────────────────────────────────────────────────────
 def is_high_risk(weather):
-    """Determine if weather is high risk. Thresholds tightened for NWS precision."""
     return (
         weather['rain_prob']  >= IMPACT_RULES['high_risk']['rain_prob']  or
         weather['wind_gust']  >= IMPACT_RULES['high_risk']['wind_gust']  or
@@ -357,14 +331,12 @@ def is_high_risk(weather):
 
 
 # ─────────────────────────────────────────────────────────────
-# SLACK MESSAGE BUILDER — updated footer threshold text only
+# SLACK MESSAGE BUILDER
 # ─────────────────────────────────────────────────────────────
 def build_high_risk_message(high_risk_games):
-    """Build Slack message for high-risk games only."""
     pacific_tz = pytz.timezone('America/Los_Angeles')
     now = datetime.now(pacific_tz)
 
-    # ── ALL CLEAR ──────────────────────────────────────────
     if not high_risk_games:
         return {
             "text": "✅ No high-risk weather games",
@@ -399,7 +371,6 @@ def build_high_risk_message(high_risk_games):
             ]
         }
 
-    # ── HIGH RISK ALERT ────────────────────────────────────
     message = {
         "text": f"🚨 {len(high_risk_games)} HIGH RISK weather game(s)",
         "blocks": [
@@ -472,7 +443,6 @@ def build_high_risk_message(high_risk_games):
         })
         message["blocks"].append({"type": "divider"})
 
-    # Footer — updated threshold text to reflect 75%
     message["blocks"].append({
         "type": "context",
         "elements": [
@@ -501,7 +471,7 @@ def post_to_slack(message):
 
 
 # ─────────────────────────────────────────────────────────────
-# MAIN — unchanged logic, NWS weather fetch now used internally
+# MAIN
 # ─────────────────────────────────────────────────────────────
 def main():
     try:
@@ -582,7 +552,6 @@ def main():
 
         print(f"\n📊 Found {len(high_risk_games)} high-risk game(s) out of {upcoming_count} total")
 
-        # Save predictions for accuracy tracking before posting
         if high_risk_games:
             save_high_risk_predictions(high_risk_games, now.strftime('%Y-%m-%d'))
 
