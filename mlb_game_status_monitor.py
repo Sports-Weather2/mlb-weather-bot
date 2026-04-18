@@ -12,7 +12,7 @@ from datetime import datetime
 import pytz
 from analytics import log_alert, log_workflow_run, log_prediction_accuracy
 
-SLACK_WEBHOOK = os.environ.get('SLACK_WEBHOOK')
+SLACK_WEBHOOK = os.environ.get('HIGH_RISK_WEBHOOK_URL')
 STATE_FILE = 'game_states.json'
 
 # ── Normalized state constants ─────────────────────────────────────────────────
