@@ -7,7 +7,7 @@
 ## 🟢 CURRENT PERFORMANCE
 
 **Status:** Fully Operational
-**Last Updated:** April 19, 2026 06:00 PM PT
+**Last Updated:** April 19, 2026 06:10 PM PT
 **Season:** Regular Season 2026
 
 ---
@@ -33,7 +33,7 @@
 | Actual Delays Occurred | 2 |
 | Correctly Predicted | 2 |
 | **Accuracy Rate** | **100.0%** |
-| False Positives | 168 |
+| False Positives | 170 |
 | False Negatives | 0 |
 
 ---
@@ -42,12 +42,12 @@
 
 | Metric | Count | Percentage |
 |--------|-------|------------|
-| Total Workflow Runs | 866 | - |
-| ✅ Successful | 545 | 62.9% |
+| Total Workflow Runs | 867 | - |
+| ✅ Successful | 546 | 63.0% |
 | ❌ Failed | 0 | 0.0% |
-| ⏭️ Skipped (outside game hours) | 321 | 37.1% |
+| ⏭️ Skipped (outside game hours) | 321 | 37.0% |
 
-**System Uptime:** 62.9%
+**System Uptime:** 63.0%
 
 ---
 
@@ -85,4 +85,4 @@ workflow run.
 
 ---
 
-_Last generated: April 19, 2026 06:00 PM PT_
+_Last generated: April 19, 2026 06:10 PM PT_
