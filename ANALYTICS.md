@@ -42,12 +42,12 @@
 
 | Metric | Count | Percentage |
 |--------|-------|------------|
-| Total Workflow Runs | 1129 | - |
-| ✅ Successful | 667 | 59.1% |
+| Total Workflow Runs | 1130 | - |
+| ✅ Successful | 667 | 59.0% |
 | ❌ Failed | 0 | 0.0% |
-| ⏭️ Skipped (outside game hours) | 462 | 40.9% |
+| ⏭️ Skipped (outside game hours) | 463 | 41.0% |
 
-**System Uptime:** 59.1%
+**System Uptime:** 59.0%
 
 ---
 
