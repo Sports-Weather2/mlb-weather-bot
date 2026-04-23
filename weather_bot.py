@@ -8,6 +8,8 @@
 #   - get_weather_forecast() replaced with get_nws_weather_forecast()
 #   - Rain threshold tightened: HIGH_RISK 70% → 75%, MONITOR 40% → 45%
 #   - Forecast now targets exact game start hour (not closest 3-hr bucket)
+#   - Thunderstorm detection smarter: ignores "Slight Chance" thunderstorms
+#     and requires rain_prob >= 40% to trigger thunderstorm HIGH RISK
 
 import os
 import json
@@ -28,7 +30,7 @@ NWS_POINTS_URL = "https://api.weather.gov/points/{lat},{lon}"
 STADIUM_COORDINATES = {
     # Fixed Dome — always excluded
     'St Petersburg,US':  {'lat': 27.7683, 'lon': -82.6534, 'roof': 'fixed'},
-    'Toronto,CA':        {'lat': 43.6414, 'lon': -79.3894, 'roof': 'fixed'},  # Rogers Centre always closed
+    'Toronto,CA':        {'lat': 43.6414, 'lon': -79.3894, 'roof': 'fixed'},
 
     # Retractable Roof — check MLB API
     'Phoenix,US':        {'lat': 33.4453, 'lon': -112.0667, 'roof': 'retractable'},
@@ -85,13 +87,13 @@ STADIUM_COORDINATES = {
 # ─────────────────────────────────────────────────────────────
 IMPACT_RULES = {
     'high_risk': {
-        'rain_prob':   75,    # was 70% — tightened for NWS precision
-        'wind_gust':   30,
-        'lightning':   True,
-        'temp_extreme': [35, 100]  # was [20,100] — tightened cold threshold
+        'rain_prob':    75,
+        'wind_gust':    30,
+        'lightning':    True,
+        'temp_extreme': [35, 100]
     },
     'monitor': {
-        'rain_prob':      45,  # was 40% — tightened for NWS precision
+        'rain_prob':      45,
         'wind_sustained': 15,
         'temp_concern':   [40, 95]
     }
@@ -105,82 +107,82 @@ def load_games():
     with open('config.json', 'r') as f:
         return json.load(f)['games']
 
+
 def get_venue_name_from_location(location):
     """Map location string to official venue name for roof lookup"""
     location_to_venue = {
-        'Phoenix,US': 'Chase Field',
-        'Miami,US': 'loanDepot park',
-        'Arlington,US': 'Globe Life Field',
-        'Houston,US': 'Minute Maid Park',
-        'Seattle,US': 'T-Mobile Park',
-        'Milwaukee,US': 'American Family Field',
-        'St Petersburg,US': 'Tropicana Field',
-        'Toronto,CA': 'Rogers Centre',
-        'Anaheim,US': 'Angel Stadium',
-        'Los Angeles,US': 'Dodger Stadium',
-        'San Francisco,US': 'Oracle Park',
-        'San Diego,US': 'Petco Park',
-        'Denver,US': 'Coors Field',
-        'Kansas City,US': 'Kauffman Stadium',
-        'Minneapolis,US': 'Target Field',
-        'Chicago,US': 'Guaranteed Rate Field',
-        'Cleveland,US': 'Progressive Field',
-        'Detroit,US': 'Comerica Park',
-        'Cincinnati,US': 'Great American Ball Park',
-        'St Louis,US': 'Busch Stadium',
-        'Pittsburgh,US': 'PNC Park',
-        'New York,US': 'Yankee Stadium',
-        'Philadelphia,US': 'Citizens Bank Park',
-        'Washington,US': 'Nationals Park',
-        'Boston,US': 'Fenway Park',
-        'Baltimore,US': 'Oriole Park at Camden Yards',
-        'Atlanta,US': 'Truist Park',
-        'Tempe,US': 'Tempe Diablo Stadium',
-        'Mesa,US': 'Sloan Park',
-        'Scottsdale,US': 'Salt River Fields',
-        'Peoria,US': 'Peoria Sports Complex',
-        'Surprise,US': 'Surprise Stadium',
-        'Goodyear,US': 'Goodyear Ballpark',
-        'Fort Myers,US': 'Hammond Stadium',
-        'Sarasota,US': 'Ed Smith Stadium',
-        'Bradenton,US': 'LECOM Park',
-        'Port Charlotte,US': 'Charlotte Sports Park',
-        'Jupiter,US': 'Roger Dean Chevrolet Stadium',
+        'Phoenix,US':         'Chase Field',
+        'Miami,US':           'loanDepot park',
+        'Arlington,US':       'Globe Life Field',
+        'Houston,US':         'Minute Maid Park',
+        'Seattle,US':         'T-Mobile Park',
+        'Milwaukee,US':       'American Family Field',
+        'St Petersburg,US':   'Tropicana Field',
+        'Toronto,CA':         'Rogers Centre',
+        'Anaheim,US':         'Angel Stadium',
+        'Los Angeles,US':     'Dodger Stadium',
+        'San Francisco,US':   'Oracle Park',
+        'San Diego,US':       'Petco Park',
+        'Denver,US':          'Coors Field',
+        'Kansas City,US':     'Kauffman Stadium',
+        'Minneapolis,US':     'Target Field',
+        'Chicago,US':         'Guaranteed Rate Field',
+        'Cleveland,US':       'Progressive Field',
+        'Detroit,US':         'Comerica Park',
+        'Cincinnati,US':      'Great American Ball Park',
+        'St Louis,US':        'Busch Stadium',
+        'Pittsburgh,US':      'PNC Park',
+        'New York,US':        'Yankee Stadium',
+        'Philadelphia,US':    'Citizens Bank Park',
+        'Washington,US':      'Nationals Park',
+        'Boston,US':          'Fenway Park',
+        'Baltimore,US':       'Oriole Park at Camden Yards',
+        'Atlanta,US':         'Truist Park',
+        'Tempe,US':           'Tempe Diablo Stadium',
+        'Mesa,US':            'Sloan Park',
+        'Scottsdale,US':      'Salt River Fields',
+        'Peoria,US':          'Peoria Sports Complex',
+        'Surprise,US':        'Surprise Stadium',
+        'Goodyear,US':        'Goodyear Ballpark',
+        'Fort Myers,US':      'Hammond Stadium',
+        'Sarasota,US':        'Ed Smith Stadium',
+        'Bradenton,US':       'LECOM Park',
+        'Port Charlotte,US':  'Charlotte Sports Park',
+        'Jupiter,US':         'Roger Dean Chevrolet Stadium',
         'West Palm Beach,US': 'The Ballpark of the Palm Beaches',
-        'Clearwater,US': 'Spectrum Field',
-        'Tampa,US': 'George M. Steinbrenner Field',
-        'Dunedin,US': 'TD Ballpark'
+        'Clearwater,US':      'Spectrum Field',
+        'Tampa,US':           'George M. Steinbrenner Field',
+        'Dunedin,US':         'TD Ballpark'
     }
     return location_to_venue.get(location, 'Unknown Venue')
+
 
 def get_venue_roof_info(venue_name):
     """
     Determine if venue has a roof and its type.
     Toronto (Rogers Centre) moved to fixed dome — roof always closed.
-    Returns: {'has_roof': bool, 'type': 'fixed'|'retractable'|'open', 'should_alert': bool}
     """
     fixed_domes = {
         'Tropicana Field': {'has_roof': True, 'type': 'fixed', 'should_alert': False},
-        'Rogers Centre':   {'has_roof': True, 'type': 'fixed', 'should_alert': False}  # Always closed
+        'Rogers Centre':   {'has_roof': True, 'type': 'fixed', 'should_alert': False}
     }
-
     retractable_roofs = {
-        'Chase Field':          {'has_roof': True, 'type': 'retractable'},
-        'loanDepot park':       {'has_roof': True, 'type': 'retractable'},
-        'Globe Life Field':     {'has_roof': True, 'type': 'retractable'},
-        'Minute Maid Park':     {'has_roof': True, 'type': 'retractable'},
-        'T-Mobile Park':        {'has_roof': True, 'type': 'retractable'},
-        'American Family Field':{'has_roof': True, 'type': 'retractable'}
+        'Chase Field':           {'has_roof': True, 'type': 'retractable'},
+        'loanDepot park':        {'has_roof': True, 'type': 'retractable'},
+        'Globe Life Field':      {'has_roof': True, 'type': 'retractable'},
+        'Minute Maid Park':      {'has_roof': True, 'type': 'retractable'},
+        'T-Mobile Park':         {'has_roof': True, 'type': 'retractable'},
+        'American Family Field': {'has_roof': True, 'type': 'retractable'}
     }
-
     if venue_name in fixed_domes:
         return fixed_domes[venue_name]
     if venue_name in retractable_roofs:
         return {**retractable_roofs[venue_name], 'should_alert': None}
     return {'has_roof': False, 'type': 'open', 'should_alert': True}
 
+
 def get_roof_status_from_mlb(game_date, venue_name):
-    """Check if retractable roof is open/closed via MLB Stats API. Unchanged."""
+    """Check if retractable roof is open/closed via MLB Stats API."""
     url = f"https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={game_date}&hydrate=venue"
     try:
         response = requests.get(url, timeout=5)
@@ -188,8 +190,7 @@ def get_roof_status_from_mlb(game_date, venue_name):
         if 'dates' in data and len(data['dates']) > 0:
             for date_info in data['dates']:
                 for game in date_info.get('games', []):
-                    game_venue = game['venue']['name']
-                    if game_venue == venue_name:
+                    if game['venue']['name'] == venue_name:
                         venue_data = game.get('venue', {})
                         if 'roofType' in venue_data:
                             roof_type = venue_data.get('roofType', '').lower()
@@ -210,7 +211,7 @@ def get_roof_status_from_mlb(game_date, venue_name):
 
 
 # ─────────────────────────────────────────────────────────────
-# NWS WEATHER FETCH — replaces get_weather_forecast()
+# NWS WEATHER FETCH
 # ─────────────────────────────────────────────────────────────
 def get_nws_hourly_forecast_url(lat, lon):
     """Step 1: Get NWS gridpoint hourly forecast URL for a lat/lon."""
@@ -234,7 +235,6 @@ def get_weather_forecast(location, game_datetime):
     Drop-in replacement for the old OpenWeatherMap get_weather_forecast().
     Returns same dict structure so all downstream code works unchanged.
     """
-    # Look up coordinates for this location
     if location not in STADIUM_COORDINATES:
         raise ValueError(f"No coordinates found for location: {location}")
 
@@ -256,7 +256,6 @@ def get_weather_forecast(location, game_datetime):
     # Step 3: Convert game_datetime to stadium local time for matching
     stadium_tz = pytz.timezone(tz_name)
     if game_datetime.tzinfo is None:
-        # Assume PT input (from config.json) and localize
         pt = pytz.timezone('America/Los_Angeles')
         game_local = pt.localize(game_datetime).astimezone(stadium_tz)
     else:
@@ -267,14 +266,13 @@ def get_weather_forecast(location, game_datetime):
     for period in periods:
         period_start = datetime.fromisoformat(period['startTime'])
         period_end   = datetime.fromisoformat(period['endTime'])
-        # Match: game start falls within this hour
         if period_start <= game_local < period_end:
             best_period = period
             break
 
     # Fallback: grab closest period within ±1 hour if no exact match
     if not best_period:
-        closest = None
+        closest      = None
         closest_diff = float('inf')
         for period in periods:
             period_start = datetime.fromisoformat(period['startTime'])
@@ -287,48 +285,62 @@ def get_weather_forecast(location, game_datetime):
     if not best_period:
         raise ValueError(f"No NWS forecast period found for {location} at {game_local}")
 
-    # Step 5: Parse NWS period into the same dict shape as before
-    # Wind speed: NWS returns "12 mph" or "10 to 15 mph"
+    # Step 5: Parse wind speed
     wind_str = best_period.get('windSpeed', '0 mph')
     try:
-        # Take the higher number if range given (e.g. "10 to 15 mph" → 15)
         wind_parts = [int(p) for p in wind_str.replace('mph', '').split('to') if p.strip().isdigit()]
         wind_speed = max(wind_parts) if wind_parts else 0
     except Exception:
         wind_speed = 0
 
-    # Precipitation probability
-    pop_data = best_period.get('probabilityOfPrecipitation', {})
+    # Step 6: Precipitation probability
+    pop_data  = best_period.get('probabilityOfPrecipitation', {})
     rain_prob = pop_data.get('value') if isinstance(pop_data, dict) else 0
-    rain_prob = rain_prob or 0  # handle None
+    rain_prob = rain_prob or 0
 
-    # Temperature
+    # Step 7: Temperature
     temp = best_period.get('temperature', 72)
 
-    # Conditions / thunderstorm detection
-    short_forecast = best_period.get('shortForecast', '')
+    # Step 8: Thunderstorm detection — SMARTER ✅
+    # Ignores "Slight Chance", "Isolated", "Chance" thunderstorms
+    # Also requires rain_prob >= 40% so low-probability storms don't trigger HIGH RISK
+    short_forecast    = best_period.get('shortForecast', '')
     detailed_forecast = best_period.get('detailedForecast', '')
-    combined = (short_forecast + ' ' + detailed_forecast).lower()
-    has_thunderstorm = any(word in combined for word in ['thunder', 'tstm', 'lightning', 'storm'])
+    combined          = (short_forecast + ' ' + detailed_forecast).lower()
+
+    # Check if it's only a slight/isolated/chance storm (not a real threat)
+    is_slight_chance = any(w in combined for w in [
+        'slight chance', 'isolated', 'chance thunderstorm',
+        'chance of thunderstorm', 'few thunderstorm'
+    ])
+
+    # Only flag thunderstorm if it's a real threat — not just a slight chance
+    # AND rain probability is meaningful (≥40%)
+    has_thunderstorm = (
+        any(w in combined for w in ['thunder', 'tstm', 'lightning'])
+        and not is_slight_chance   # ✅ Ignore slight chance thunderstorms
+        and rain_prob >= 40        # ✅ Require meaningful rain probability
+    )
 
     print(f"   📡 NWS [{location}] @ {game_local.strftime('%I:%M %p %Z')}: "
-          f"{temp}°F | {rain_prob}% rain | {wind_speed}mph wind | {short_forecast}")
+          f"{temp}°F | {rain_prob}% rain | {wind_speed}mph wind | "
+          f"{short_forecast} | ⚡thunderstorm={has_thunderstorm}")
 
     return {
-        'temp':           temp,
-        'feels_like':     temp,         # NWS free tier doesn't provide feels_like — use temp
-        'rain_prob':      rain_prob,
-        'conditions':     short_forecast,
-        'wind_speed':     wind_speed,
-        'wind_gust':      wind_speed,   # NWS hourly doesn't separate gust — use wind_speed
-        'humidity':       0,            # NWS hourly doesn't include humidity in free tier
+        'temp':             temp,
+        'feels_like':       temp,
+        'rain_prob':        rain_prob,
+        'conditions':       short_forecast,
+        'wind_speed':       wind_speed,
+        'wind_gust':        wind_speed,
+        'humidity':         0,
         'has_thunderstorm': has_thunderstorm,
-        'nws_period_start': best_period.get('startTime', '')  # extra debug info
+        'nws_period_start': best_period.get('startTime', '')
     }
 
 
 # ─────────────────────────────────────────────────────────────
-# IMPACT / SLACK / MAIN — all unchanged below
+# IMPACT / SLACK / MAIN — unchanged
 # ─────────────────────────────────────────────────────────────
 def calculate_game_impact(weather):
     if (weather['rain_prob'] >= IMPACT_RULES['high_risk']['rain_prob'] or
