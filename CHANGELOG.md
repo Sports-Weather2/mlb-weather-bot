@@ -5,6 +5,59 @@ All notable changes to the MLB Weather Monitoring System.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ---
+## [2.0.6] - 2026-04-23
+
+### 🔧 Changed
+
+#### `weather_bot.py` — MONITOR Wind Threshold Raised: 15 mph → 20 mph
+- **Root cause:** `wind_sustained` threshold of 15 mph was too
+  sensitive — triggering MONITOR alerts on clear sunny days with
+  0-12% rain probability where wind had zero realistic impact
+  on game play
+- **Symptom:** April 23, 2026 daily report showed 2 games as
+  🟡 MONITOR with perfectly clear conditions:
+  - Phillies vs Cubs — 0% rain, 78°F, 15 mph wind → MONITOR ❌
+  - Padres vs Rockies — 12% rain, 63°F, 17 mph wind → MONITOR ❌
+  - Both should have been 🟢 CLEAR
+- **Fix:** Raised `wind_sustained` from 15 → 20 mph in the
+  `monitor` section of `IMPACT_RULES` in `weather_bot.py`
+- 15-17 mph is a light-moderate breeze — completely normal and
+  not a realistic delay or game impact concern. MLB games are
+  typically not affected until winds are consistently 20+ mph
+  sustained
+- `high_risk_alert.py` not affected — that file only contains
+  `high_risk` thresholds, no `monitor` section
+
+### 🎯 Impact
+
+- **Fewer false MONITOR alerts** on clear days with light wind
+- **MONITOR now reserved for genuinely concerning conditions**
+  that warrant ops team awareness
+
+### 📊 Updated MONITOR Thresholds
+
+| Condition | Old Threshold | New Threshold |
+|---|---|---|
+| Wind sustained | ≥15 mph | ≥20 mph |
+| Rain probability | ≥45% | ≥45% (unchanged) |
+| Temperature | 40–95°F | 40–95°F (unchanged) |
+
+### 📊 Alert Behavior (After Fix)
+
+| Conditions | Old Result | New Result |
+|---|---|---|
+| 0% rain, 78°F, 15 mph wind | 🟡 MONITOR ❌ | 🟢 CLEAR ✅ |
+| 12% rain, 63°F, 17 mph wind | 🟡 MONITOR ❌ | 🟢 CLEAR ✅ |
+| 0% rain, 72°F, 21 mph wind | 🟡 MONITOR ❌ | 🟡 MONITOR ✅ |
+| 50% rain, 72°F, 18 mph wind | 🟡 MONITOR ✅ | 🟡 MONITOR ✅ |
+
+### 📋 Files Changed
+
+| File | Type | Summary |
+|---|---|---|
+| `weather_bot.py` | 🔧 Modified | `wind_sustained` raised 15 → 20 mph in MONITOR thresholds |
+
+---
 ## [2.0.5] - 2026-04-23
 
 ### 🔧 Changed
