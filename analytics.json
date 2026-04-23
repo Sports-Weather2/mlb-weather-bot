@@ -16,7 +16,7 @@
   "accuracy": {
     "delays_predicted": 2,
     "actual_delays": 2,
-    "false_positives": 406,
+    "false_positives": 0,
     "false_negatives": 0
   },
   "workflow_runs": {
