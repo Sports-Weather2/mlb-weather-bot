@@ -2,8 +2,10 @@
 # Updated: April 2026
 # Changes:
 #   - Added timeout=10 to requests.get() in get_mlb_game_status()
-#   - No weather API changes needed — this file uses MLB Stats API only
-#   - All state logic, analytics, and Slack formatting unchanged
+#   - Fixed check_and_log_false_positives() — now only logs ONCE per game
+#     when game reaches FINAL state, not every 10-min cycle
+#   - Added false_positive_logged.json to track already-logged false positives
+#   - Prevents 406+ false positive inflation from repeated 10-min cycles
 
 import os
 import json
@@ -13,7 +15,7 @@ import pytz
 from analytics import log_alert, log_workflow_run, log_prediction_accuracy
 
 SLACK_WEBHOOK = os.environ.get('HIGH_RISK_WEBHOOK_URL')
-STATE_FILE = 'game_states.json'
+STATE_FILE    = 'game_states.json'
 
 # ── Normalized state constants ─────────────────────────────────────────────────
 STATE_DELAYED   = "DELAYED"
@@ -58,7 +60,7 @@ def get_venue_info_from_game(game):
 def get_venue_roof_type(venue_name):
     fixed_domes = {
         'Tropicana Field': {'type': 'fixed_dome',   'description': '🏟️ Fixed Dome'},
-        'Rogers Centre':   {'type': 'fixed_dome',   'description': '🏟️ Fixed Dome'}  # Always closed
+        'Rogers Centre':   {'type': 'fixed_dome',   'description': '🏟️ Fixed Dome'}
     }
     retractable_roofs = {
         'Chase Field':           {'type': 'retractable', 'description': '🔄 Retractable Roof'},
@@ -79,7 +81,7 @@ def get_mlb_game_status(game_date):
     url = (f"https://statsapi.mlb.com/api/v1/schedule"
            f"?sportId=1&date={game_date}&hydrate=linescore,venue")
     try:
-        response = requests.get(url, timeout=10)  # ✅ Added timeout
+        response = requests.get(url, timeout=10)
         data = response.json()
         games_status = []
 
@@ -209,10 +211,14 @@ def check_and_log_prediction_accuracy(game_pk, game_date):
 
 def check_and_log_false_positives(game_date):
     """
-    Any game we predicted as high risk that never got a delay is a false positive.
-    Called once at the end of monitor_games().
+    Check predicted games that finished as FINAL without any delay.
+    Only logs false positive ONCE per game when it reaches FINAL state.
+    Uses false_positive_logged.json to prevent logging same game
+    multiple times across 10-min monitoring cycles.
     """
-    predictions_file = 'high_risk_predictions.json'
+    predictions_file   = 'high_risk_predictions.json'
+    false_pos_log_file = 'false_positive_logged.json'
+
     try:
         with open(predictions_file, 'r') as f:
             predictions = json.load(f)
@@ -221,19 +227,40 @@ def check_and_log_false_positives(game_date):
         if not today_predictions:
             return
 
-        states = load_game_states()
+        # Load which game PKs already logged as false positives
+        try:
+            with open(false_pos_log_file, 'r') as f:
+                already_logged = json.load(f)
+        except FileNotFoundError:
+            already_logged = {}
+
+        today_logged = already_logged.get(game_date, [])
+        states       = load_game_states()
+        new_logs     = []
 
         for game_pk in today_predictions:
-            state = states.get(str(game_pk), {}).get('state', '')
-            game_actually_delayed = state in [STATE_DELAYED, STATE_POSTPONED, STATE_SUSPENDED]
+            # Skip if already logged as false positive
+            if game_pk in today_logged:
+                continue
 
-            if not game_actually_delayed:
+            state = states.get(str(game_pk), {}).get('state', '')
+
+            # Only log as false positive when game is FINAL
+            # — meaning it completed without ever being delayed
+            if state == STATE_FINAL:
                 log_prediction_accuracy(
                     predicted_delay=True,
                     actual_delay=False
                 )
                 print(f"📊 Accuracy logged: ❌ FALSE POSITIVE — "
-                      f"predicted delay but game played normally (pk: {game_pk})")
+                      f"predicted delay but game finished normally (pk: {game_pk})")
+                new_logs.append(game_pk)
+
+        # Persist which games have been logged to prevent double counting
+        if new_logs:
+            already_logged[game_date] = today_logged + new_logs
+            with open(false_pos_log_file, 'w') as f:
+                json.dump(already_logged, f, indent=2)
 
     except FileNotFoundError:
         pass
@@ -360,7 +387,7 @@ def send_delay_alert(game_status, alert_type):
         ]
     })
 
-    response = requests.post(SLACK_WEBHOOK, json=message, timeout=10)  # ✅ Added timeout
+    response = requests.post(SLACK_WEBHOOK, json=message, timeout=10)
 
     if response.status_code == 200:
         print(f"✅ {alert_type} alert sent for {game_status['matchup']} at {venue_name}")
@@ -439,7 +466,7 @@ def monitor_games():
             }
             print(f"   ✅ No change: {game['matchup']} — {current_normalized}")
 
-    # ✅ Check for false positives at end of monitoring cycle
+    # ✅ Check for false positives — only logs ONCE per game when FINAL
     check_and_log_false_positives(today)
 
     save_game_states(current_states)
