@@ -95,7 +95,7 @@ IMPACT_RULES = {
     },
     'monitor': {
         'rain_prob':      45,
-        'wind_sustained': 15,
+        'wind_sustained': 20,
         'temp_concern':   [40, 95]
     }
 }
