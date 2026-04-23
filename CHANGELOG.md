@@ -5,6 +5,7 @@ All notable changes to the MLB Weather Monitoring System.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ---
+
 ## [2.0.4] - 2026-04-23
 
 ### 🐛 Fixed
@@ -33,22 +34,51 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ### 🔧 Changed
 
 #### Thunderstorm Detection Logic — Both Files
+- Old logic triggered HIGH RISK on any forecast containing
+  "thunder", "tstm", "lightning", or "storm" regardless of
+  rain probability or storm severity qualifier
+- New logic requires both conditions to be true:
+  - Forecast does NOT contain a slight/isolated/chance qualifier
+  - Rain probability is ≥40%
 
-```python
-# Old — too aggressive ❌
-has_thunderstorm = any(w in combined for w in
-    ['thunder', 'tstm', 'lightning', 'storm'])
+#### Console Logging — Both Files
+- Added `⚡thunderstorm=True/False` to NWS fetch log line
+  so every run shows whether thunderstorm flag was set —
+  makes it easy to spot false positives in GitHub Actions logs
 
-# New — smarter, requires real threat ✅
-is_slight_chance = any(w in combined for w in [
-    'slight chance', 'isolated', 'chance thunderstorm',
-    'chance of thunderstorm', 'few thunderstorm'
-])
-has_thunderstorm = (
-    any(w in combined for w in ['thunder', 'tstm', 'lightning'])
-    and not is_slight_chance   # ignore slight chance storms
-    and rain_prob >= 40        # require meaningful rain probability
-)
+#### `high_risk_alert.py` — Slack Footer Updated
+- Footer now reads:
+  `≥75% rain OR thunderstorms (≥40% rain) OR
+  temps ≤35°F / ≥100°F OR wind gusts ≥30 mph`
+  — clarifies that thunderstorm alert requires meaningful rain
+
+### 🎯 Impact
+
+- **"Slight Chance Thunderstorms" no longer triggers HIGH RISK**
+  regardless of rain probability
+- **Thunderstorm alert now requires actual weather threat** —
+  both storm conditions AND meaningful rain probability
+
+### 📊 Thunderstorm Alert Behavior (After Fix)
+
+| NWS Forecast | Rain % | Old Result | New Result |
+|---|---|---|---|
+| Slight Chance Showers And Thunderstorms | 19% | 🔴 HIGH RISK ❌ | 🟢 CLEAR ✅ |
+| Chance Thunderstorms | 35% | 🔴 HIGH RISK ❌ | 🟢 CLEAR ✅ |
+| Chance Thunderstorms | 45% | 🔴 HIGH RISK ❌ | 🔴 HIGH RISK ✅ |
+| Showers And Thunderstorms | 75% | 🔴 HIGH RISK ✅ | 🔴 HIGH RISK ✅ |
+| Thunderstorms | 80% | 🔴 HIGH RISK ✅ | 🔴 HIGH RISK ✅ |
+| Scattered Thunderstorms | 60% | 🔴 HIGH RISK ✅ | 🔴 HIGH RISK ✅ |
+
+### 📋 Files Changed
+
+| File | Type | Summary |
+|---|---|---|
+| `weather_bot.py` | 🔧 Modified | Smarter thunderstorm detection — slight chance + rain ≥40% required |
+| `high_risk_alert.py` | 🔧 Modified | Same thunderstorm fix + Slack footer updated |
+
+---
+
 ## [2.0.3] - 2026-04-23
 
 ### 🐛 Fixed
@@ -195,6 +225,7 @@ has_thunderstorm = (
 | `test-venues.yml` | 🔧 Modified | Removed `WEATHER_API_KEY` env block entirely |
 
 ---
+
 ## [2.0.1] - 2026-04-18
 
 ### 🐛 Fixed
@@ -609,31 +640,21 @@ has_thunderstorm = (
   `git diff --quiet && git diff --staged --quiet` then detected
   unstaged working directory changes and exited with code 1,
   failing the entire job
-- **Symptom:** GitHub Actions showed red ❌ on
-  **"Commit game state tracking and analytics"** step with:
-  no changes added to commit — Error: Process completed with
-  exit code 1 — even though `ANALYTICS.md`, `analytics.json`,
-  and `game_states.json` were all showing as modified
 - **Fix 1:** Split `git add` into individual lines each with
   `|| true` so a failure staging one file never blocks others
   from being staged
 - **Fix 2:** Removed `git diff --quiet &&` from the commit
-  condition — this was checking for unstaged working directory
-  changes which caused a false exit code 1. Now only checks
-  staged changes
+  condition — now only checks staged changes
 - **Fix 3:** Added `|| true` to the `git commit` command itself
   so the step never exits with code 1 when there are genuinely
   no changes to commit between runs
-- Same fix applied to **"Commit analytics for skipped run"**
-  step for consistency
 
 ### 🎯 Impact
 - **Commit step no longer fails the job** — GitHub Actions run
   shows green ✅ on all steps
 - **No impact on Slack alerting** — purely a workflow reliability
   fix
-- **State and analytics now reliably committed** every run without
-  risk of job failure masking real errors in the monitoring steps
+- **State and analytics now reliably committed** every run
 
 ---
 
@@ -642,41 +663,20 @@ has_thunderstorm = (
 ### 🐛 Fixed
 
 #### All Three Workflows — Skipped Run Analytics Not Logged
-- **`weather-update-v2.yml`**, **`high-risk-alert-v2.yml`**,
-  **`mlb-status-monitor-v2.yml`**: When the DST backup cron or
-  outside-hours time check caused a run to be skipped, the Python
-  script was never reached meaning `log_workflow_run('skipped')`
-  was never called — skipped run count and total run count were
-  both severely undercounted in the dashboard
-  - **Fix:** Added "Log skipped run" step to all three workflows
-    that fires specifically when `already_ran == 'true'` or
-      `should_run == 'false'`
-  - **Fix:** Added "Commit analytics for skipped run" step to
-    all three workflows so the incremented skipped count is
-    committed back to the repo and survives VM teardown
+- Added "Log skipped run" step to all three workflows
+- Added "Commit analytics for skipped run" step to all three
+  workflows
 
 #### `weather-update-v2.yml` — Analytics Never Committed
-- `analytics.json` and `ANALYTICS.md` were never included in the
-  commit step, meaning daily report metrics were written locally
-  but lost when the GitHub Actions VM was torn down after each run
-  - **Fix:** Added `analytics.json` and `ANALYTICS.md` to the
-    commit step so daily report analytics persist correctly
+- Added `analytics.json` and `ANALYTICS.md` to the commit step
 
 #### `weather-update-v2.yml` — Silent Push Failure Risk
-- `git push || true` could silently lose `last_weather_run.txt`
-  if two cron runs overlapped, potentially causing duplicate daily
-  weather reports to post to Slack
-  - **Fix:** Added `git pull --rebase origin main` before push and
-    replaced `|| true` with a warning echo
+- Added `git pull --rebase origin main` before push and
+  replaced `|| true` with a warning echo
 
 #### `high_risk_alert.py` — Games Monitored Double Counting
-- `log_games_monitored(upcoming_count)` was being called in both
-  `high_risk_alert.py` and `weather_bot.py` for the same games,
-  causing the Games Monitored metric to be counted twice on any
-  day both scripts ran
-  - **Fix:** Removed `log_games_monitored()` call and import from
-    `high_risk_alert.py` — `weather_bot.py` is the single source
-    of truth for games monitored count
+- Removed `log_games_monitored()` call from `high_risk_alert.py`
+  — `weather_bot.py` is the single source of truth
 
 ### 🎯 Impact
 - **Skipped Runs now accurately tracked** across all three workflows
@@ -692,10 +692,8 @@ has_thunderstorm = (
 ### ✨ Added
 
 #### `high_risk_alert.py` — Games Monitored Tracking
-- Added `log_games_monitored` and `log_prediction_accuracy` to
-  imports
+- Added `log_games_monitored` and `log_prediction_accuracy` to imports
 - Added `log_games_monitored(upcoming_count)` call in `main()`
-  after upcoming games are tallied
 
 #### `mlb-status-monitor-v2.yml` — Skipped Run Tracking
 - New step "Log skipped run outside game hours"
