@@ -5,6 +5,86 @@ All notable changes to the MLB Weather Monitoring System.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ---
+## [2.0.5] - 2026-04-23
+
+### 🔧 Changed
+
+#### `weather_bot.py` + `high_risk_alert.py` — Priority 1: Tightened Thresholds
+
+- **Rain threshold raised: 75% → 80%** — reduces false HIGH RISK
+  alerts on borderline rain forecasts. Most MLB postponements
+  occur when rain probability is 85%+ — raising to 80% better
+  reflects real-world delay conditions
+- **Added `'scattered thunderstorm'` to slight chance list** —
+  NWS uses "Scattered Thunderstorms" for 30-50% storm coverage
+  which is not a guaranteed delay trigger. Now ignored alongside
+  "Slight Chance", "Isolated", and "Chance" thunderstorms
+  - Updated `is_slight_chance` check in `get_weather_forecast()`
+  - Thunderstorm HIGH RISK still requires: active (non-scattered)
+    storm AND rain probability ≥40%
+
+#### `weather_bot.py` + `high_risk_alert.py` — Priority 2: "Why Triggered" Reason Line
+
+- Every HIGH RISK alert now includes a `📋 Why:` line showing
+  exactly which condition crossed the threshold — builds team
+  trust and allows self-validation without checking external sources
+- Examples:
+  - `📋 Why: Rain 81% ≥ 80% threshold`
+  - `📋 Why: Active thunderstorms + Rain 45%`
+  - `📋 Why: Wind 32 mph ≥ 30 mph threshold`
+  - `📋 Why: Temp 34°F ≤ 35°F threshold`
+- Multiple triggers shown together with ` | ` separator:
+  - `📋 Why: Rain 85% ≥ 80% threshold | Active thunderstorms + Rain 85%`
+- Implemented via new `trigger_reason` field returned from
+  `get_weather_forecast()` and displayed in both
+  `format_game_block()` (`weather_bot.py`) and
+  `build_high_risk_message()` (`high_risk_alert.py`)
+
+#### `weather_bot.py` + `high_risk_alert.py` — Priority 4: Delay Probability Language
+
+- Every HIGH RISK alert now includes a `🎯 Delay Probability:`
+  line with human-readable delay risk — mirrors the kind of
+  context RotoWire provides, helping the ops team calibrate
+  their response without needing to check external sources
+- Four tiers based on conditions:
+  - `🔴 VERY HIGH — Delay or postponement likely`
+    (rain ≥90% OR thunderstorms + rain ≥70%)
+  - `🟠 HIGH — Delay probable at game time`
+    (rain ≥80% OR thunderstorms + rain ≥50%)
+  - `🟡 ELEVATED — Conditions may impact play`
+    (active thunderstorms OR wind ≥30 mph)
+  - `🟡 ELEVATED — Extreme cold may impact play`
+    (temp ≤35°F)
+- Implemented via new `delay_probability` field returned from
+  `get_weather_forecast()` and displayed in both alert builders
+
+#### `high_risk_alert.py` — Slack Footer Updated
+- Footer updated to reflect new 80% threshold:
+  `≥80% rain OR thunderstorms (≥40% rain) OR
+  temps ≤35°F / ≥100°F OR wind gusts ≥30 mph`
+
+### 🎯 Impact
+
+- **Fewer false HIGH RISK alerts** — 80% threshold + scattered
+  thunderstorm exclusion eliminates borderline false positives
+- **Full transparency on every alert** — team can see exactly
+  why the system fired without checking RotoWire or NWS directly
+- **Delay severity context** — ops team knows whether to expect
+  a brief delay vs likely postponement before game time
+- **Real-time delay alerts unaffected** — `mlb_game_status_monitor.py`
+  uses MLB Stats API only and was not modified
+
+### 📊 Alert Behavior (After Changes)
+
+#### Threshold Changes
+
+| Condition | Old Threshold | New Threshold |
+|---|---|---|
+| Rain HIGH RISK | ≥75% | ≥80% |
+| Scattered Thunderstorms | Triggered HIGH RISK | ✅ Now ignored |
+| Thunderstorms + Rain | ≥40% rain required | ≥40% rain required (unchanged) |
+
+#### Sample HIGH RISK Alert — New Format
 
 ## [2.0.4] - 2026-04-23
 
