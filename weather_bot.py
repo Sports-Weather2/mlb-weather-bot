@@ -9,7 +9,7 @@
 #   - Rain threshold tightened: HIGH_RISK 75% → 80%, MONITOR 40% → 45%
 #   - Forecast now targets exact game start hour (not closest 3-hr bucket)
 #   - Thunderstorm detection smarter: ignores "Slight Chance" +
-#     "Scattered" thunderstorms and requires rain_prob >= 40%
+#     "Scattered" + "Chance Showers And Thunderstorms" and requires rain >= 40%
 #   - Added "Why Triggered" reason line to HIGH RISK alerts
 #   - Added delay probability language to HIGH RISK alerts
 
@@ -88,7 +88,7 @@ STADIUM_COORDINATES = {
 # ─────────────────────────────────────────────────────────────
 IMPACT_RULES = {
     'high_risk': {
-        'rain_prob':    80,    # ✅ raised from 75% → 80%
+        'rain_prob':    80,
         'wind_gust':    30,
         'lightning':    True,
         'temp_extreme': [35, 100]
@@ -286,11 +286,13 @@ def get_weather_forecast(location, game_datetime):
     detailed_forecast = best_period.get('detailedForecast', '')
     combined          = (short_forecast + ' ' + detailed_forecast).lower()
 
-    # ✅ PRIORITY 1 — Added 'scattered thunderstorm' to slight chance list
+    # ✅ THUNDERSTORM DETECTION — expanded slight chance exclusion list
     is_slight_chance = any(w in combined for w in [
         'slight chance', 'isolated', 'chance thunderstorm',
         'chance of thunderstorm', 'few thunderstorm',
-        'scattered thunderstorm'   # ✅ NEW
+        'scattered thunderstorm',           # excludes "Scattered Thunderstorms"
+        'chance showers and thunderstorm',  # ✅ NEW — excludes "Chance Showers And Thunderstorms"
+        'chance shower'                     # ✅ NEW — catches all "chance shower" variants
     ])
 
     has_thunderstorm = (
@@ -299,7 +301,7 @@ def get_weather_forecast(location, game_datetime):
         and rain_prob >= 40
     )
 
-    # ✅ PRIORITY 2 — Build "why triggered" reason string
+    # Build "why triggered" reason string
     trigger_reasons = []
     if rain_prob >= IMPACT_RULES['high_risk']['rain_prob']:
         trigger_reasons.append(f"Rain {rain_prob:.0f}% ≥ {IMPACT_RULES['high_risk']['rain_prob']}% threshold")
@@ -313,7 +315,7 @@ def get_weather_forecast(location, game_datetime):
         trigger_reasons.append(f"Temp {temp}°F ≥ {IMPACT_RULES['high_risk']['temp_extreme'][1]}°F threshold")
     trigger_reason = ' | '.join(trigger_reasons) if trigger_reasons else 'No trigger'
 
-    # ✅ PRIORITY 4 — Delay probability language
+    # Delay probability language
     if rain_prob >= 90 or (has_thunderstorm and rain_prob >= 70):
         delay_probability = "🔴 *VERY HIGH* — Delay or postponement likely"
     elif rain_prob >= 80 or (has_thunderstorm and rain_prob >= 50):
@@ -340,8 +342,8 @@ def get_weather_forecast(location, game_datetime):
         'humidity':          0,
         'has_thunderstorm':  has_thunderstorm,
         'nws_period_start':  best_period.get('startTime', ''),
-        'trigger_reason':    trigger_reason,      # ✅ PRIORITY 2
-        'delay_probability': delay_probability    # ✅ PRIORITY 4
+        'trigger_reason':    trigger_reason,
+        'delay_probability': delay_probability
     }
 
 
@@ -402,7 +404,6 @@ def format_game_block(game, weather, impact):
     if weather['wind_gust'] > weather['wind_speed'] + 5:
         weather_details += f" (gusts to {weather['wind_gust']:.0f} mph)"
 
-    # ✅ PRIORITY 2 + 4 — Add reason + delay probability to HIGH RISK blocks
     impact_details = f"{impact['emoji']} *{impact['status']}*"
     if impact['level'] == 'HIGH_RISK':
         impact_details += (
