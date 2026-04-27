@@ -1,66 +1,34 @@
 {
-  "824852": {
+  "824446": {
     "state": "PREVIEW",
-    "matchup": "Boston Red Sox vs Baltimore Orioles"
+    "matchup": "Tampa Bay Rays vs Cleveland Guardians"
   },
-  "824934": {
+  "823395": {
     "state": "PREVIEW",
-    "matchup": "Philadelphia Phillies vs Atlanta Braves"
+    "matchup": "St. Louis Cardinals vs Pittsburgh Pirates"
   },
-  "822824": {
+  "822825": {
     "state": "PREVIEW",
-    "matchup": "Cleveland Guardians vs Toronto Blue Jays"
+    "matchup": "Boston Red Sox vs Toronto Blue Jays"
   },
-  "824528": {
+  "823719": {
     "state": "PREVIEW",
-    "matchup": "Detroit Tigers vs Cincinnati Reds"
+    "matchup": "Seattle Mariners vs Minnesota Twins"
   },
-  "823635": {
+  "824609": {
     "state": "PREVIEW",
-    "matchup": "Colorado Rockies vs New York Mets"
+    "matchup": "Los Angeles Angels vs Chicago White Sox"
   },
-  "823637": {
-    "state": "POSTPONED",
-    "matchup": "Colorado Rockies vs New York Mets"
-  },
-  "822991": {
+  "822906": {
     "state": "PREVIEW",
-    "matchup": "Minnesota Twins vs Tampa Bay Rays"
+    "matchup": "New York Yankees vs Texas Rangers"
   },
-  "824612": {
+  "823311": {
     "state": "PREVIEW",
-    "matchup": "Washington Nationals vs Chicago White Sox"
+    "matchup": "Chicago Cubs vs San Diego Padres"
   },
-  "824202": {
+  "823961": {
     "state": "PREVIEW",
-    "matchup": "New York Yankees vs Houston Astros"
-  },
-  "823797": {
-    "state": "PREVIEW",
-    "matchup": "Pittsburgh Pirates vs Milwaukee Brewers"
-  },
-  "823068": {
-    "state": "PREVIEW",
-    "matchup": "Seattle Mariners vs St. Louis Cardinals"
-  },
-  "822911": {
-    "state": "PREVIEW",
-    "matchup": "Athletics vs Texas Rangers"
-  },
-  "825094": {
-    "state": "PREVIEW",
-    "matchup": "San Diego Padres vs Arizona Diamondbacks"
-  },
-  "823230": {
-    "state": "PREVIEW",
-    "matchup": "Miami Marlins vs San Francisco Giants"
-  },
-  "824122": {
-    "state": "LIVE",
-    "matchup": "Los Angeles Angels vs Kansas City Royals"
-  },
-  "823959": {
-    "state": "PREVIEW",
-    "matchup": "Chicago Cubs vs Los Angeles Dodgers"
+    "matchup": "Miami Marlins vs Los Angeles Dodgers"
   }
 }
