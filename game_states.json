@@ -27,10 +27,6 @@
     "state": "PREVIEW",
     "matchup": "Chicago Cubs vs San Diego Padres"
   },
-  "823471": {
-    "state": "PREVIEW",
-    "matchup": "San Francisco Giants vs Philadelphia Phillies"
-  },
   "824525": {
     "state": "PREVIEW",
     "matchup": "Colorado Rockies vs Cincinnati Reds"
@@ -54,6 +50,10 @@
   "825015": {
     "state": "PREVIEW",
     "matchup": "Kansas City Royals vs Athletics"
+  },
+  "823471": {
+    "state": "POSTPONED",
+    "matchup": "San Francisco Giants vs Philadelphia Phillies"
   },
   "824850": {
     "state": "POSTPONED",
