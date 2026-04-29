@@ -7,6 +7,8 @@
 #   - Removed stale Oakland Coliseum entry
 #   - Added timeout to requests call
 #   - Added unknown venue warning with full list for easier debugging
+#   - Added Rate Field (White Sox new stadium name) → Chicago,US
+#   - Added UNIQLO Field at Dodger Stadium (renamed) → Los Angeles,US
 
 import json
 import requests
@@ -31,11 +33,11 @@ def get_mlb_schedule(days_ahead=1):
             if 'dates' in data and len(data['dates']) > 0:
                 for date_info in data['dates']:
                     for game in date_info.get('games', []):
-                        away_team      = game['teams']['away']['team']['name']
-                        home_team      = game['teams']['home']['team']['name']
+                        away_team         = game['teams']['away']['team']['name']
+                        home_team         = game['teams']['home']['team']['name']
                         game_datetime_utc = game['gameDate']
-                        venue_name     = game['venue']['name']
-                        game_pk        = game.get('gamePk', '')  # ✅ Added for accuracy tracking
+                        venue_name        = game['venue']['name']
+                        game_pk           = game.get('gamePk', '')
 
                         venue_location = get_venue_location(venue_name)
 
@@ -49,8 +51,8 @@ def get_mlb_schedule(days_ahead=1):
                             'time':     game_dt_pacific.strftime('%H:%M'),
                             'opponent': f"{away_team} vs {home_team}",
                             'location': venue_location,
-                            'venue':    venue_name,            # ✅ Added for debugging
-                            'game_pk':  game_pk                # ✅ Added for accuracy tracking
+                            'venue':    venue_name,
+                            'game_pk':  game_pk
                         })
 
         except Exception as e:
@@ -73,14 +75,14 @@ def get_venue_location(venue_name):
         'Camelback Ranch':                   'Phoenix,US',
         'Sloan Park':                        'Mesa,US',
         'Salt River Fields':                 'Scottsdale,US',
-        'Salt River Fields at Talking Stick':'Scottsdale,US',  # ✅ alternate MLB API name
+        'Salt River Fields at Talking Stick':'Scottsdale,US',
         'Peoria Sports Complex':             'Peoria,US',
         'Surprise Stadium':                  'Surprise,US',
         'Goodyear Ballpark':                 'Goodyear,US',
         'Hohokam Stadium':                   'Mesa,US',
         'American Family Fields of Phoenix': 'Phoenix,US',
         'JetBlue Park':                      'Fort Myers,US',
-        'JetBlue Park at Fenway South':      'Fort Myers,US',  # ✅ alternate MLB API name
+        'JetBlue Park at Fenway South':      'Fort Myers,US',
         'Ed Smith Stadium':                  'Sarasota,US',
         'LECOM Park':                        'Bradenton,US',
         'Charlotte Sports Park':             'Port Charlotte,US',
@@ -96,46 +98,48 @@ def get_venue_location(venue_name):
     # ── Regular Season ─────────────────────────────────────────
     regular_season_venues = {
         # AL West
-        'Angel Stadium':                 'Anaheim,US',
-        'Dodger Stadium':                'Los Angeles,US',
-        'T-Mobile Park':                 'Seattle,US',
-        'Globe Life Field':              'Arlington,US',
-        'Minute Maid Park':              'Houston,US',
-        'Sutter Health Park':            'Oakland,US',    # ✅ Athletics (Sacramento)
+        'Angel Stadium':                       'Anaheim,US',
+        'Dodger Stadium':                      'Los Angeles,US',
+        'UNIQLO Field at Dodger Stadium':      'Los Angeles,US',  # ✅ NEW — renamed
+        'T-Mobile Park':                       'Seattle,US',
+        'Globe Life Field':                    'Arlington,US',
+        'Minute Maid Park':                    'Houston,US',
+        'Sutter Health Park':                  'Oakland,US',
 
         # AL Central
-        'Kauffman Stadium':              'Kansas City,US',
-        'Target Field':                  'Minneapolis,US',
-        'Guaranteed Rate Field':         'Chicago,US',
-        'Progressive Field':             'Cleveland,US',
-        'Comerica Park':                 'Detroit,US',
+        'Kauffman Stadium':                    'Kansas City,US',
+        'Target Field':                        'Minneapolis,US',
+        'Guaranteed Rate Field':               'Chicago,US',
+        'Rate Field':                          'Chicago,US',      # ✅ NEW — White Sox renamed
+        'Progressive Field':                   'Cleveland,US',
+        'Comerica Park':                       'Detroit,US',
 
         # AL East
-        'Yankee Stadium':                'New York,US',
-        'Fenway Park':                   'Boston,US',
-        'Oriole Park at Camden Yards':   'Baltimore,US',
-        'Rogers Centre':                 'Toronto,CA',    # Excluded — roof always closed
-        'Tropicana Field':               'St Petersburg,US',
+        'Yankee Stadium':                      'New York,US',
+        'Fenway Park':                         'Boston,US',
+        'Oriole Park at Camden Yards':         'Baltimore,US',
+        'Rogers Centre':                       'Toronto,CA',
+        'Tropicana Field':                     'St Petersburg,US',
 
         # NL West
-        'Oracle Park':                   'San Francisco,US',
-        'Petco Park':                    'San Diego,US',
-        'Chase Field':                   'Phoenix,US',
-        'Coors Field':                   'Denver,US',
+        'Oracle Park':                         'San Francisco,US',
+        'Petco Park':                          'San Diego,US',
+        'Chase Field':                         'Phoenix,US',
+        'Coors Field':                         'Denver,US',
 
         # NL Central
-        'Great American Ball Park':      'Cincinnati,US',
-        'Busch Stadium':                 'St Louis,US',
-        'American Family Field':         'Milwaukee,US',
-        'PNC Park':                      'Pittsburgh,US',
-        'Wrigley Field':                 'Chicago,US',
+        'Great American Ball Park':            'Cincinnati,US',
+        'Busch Stadium':                       'St Louis,US',
+        'American Family Field':               'Milwaukee,US',
+        'PNC Park':                            'Pittsburgh,US',
+        'Wrigley Field':                       'Chicago,US',
 
         # NL East
-        'Citi Field':                    'New York,US',
-        'Citizens Bank Park':            'Philadelphia,US',
-        'Nationals Park':                'Washington,US',
-        'Truist Park':                   'Atlanta,US',
-        'loanDepot park':                'Miami,US',
+        'Citi Field':                          'New York,US',
+        'Citizens Bank Park':                  'Philadelphia,US',
+        'Nationals Park':                      'Washington,US',
+        'Truist Park':                         'Atlanta,US',
+        'loanDepot park':                      'Miami,US',
     }
 
     if venue_name in spring_training_venues:
@@ -143,7 +147,6 @@ def get_venue_location(venue_name):
     elif venue_name in regular_season_venues:
         return regular_season_venues[venue_name]
     else:
-        # ✅ Improved warning — shows exact venue name for easy debugging
         print(f"⚠️  WARNING: Unknown venue '{venue_name}' — defaulting to Phoenix,US")
         print(f"   👉 Add '{venue_name}' to get_venue_location() in update_schedule.py")
         return 'Phoenix,US'
