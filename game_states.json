@@ -1,62 +1,62 @@
 {
-  "824447": {
-    "state": "PREVIEW",
+  "824445": {
+    "state": "DELAYED",
     "matchup": "Tampa Bay Rays vs Cleveland Guardians"
   },
-  "824849": {
-    "state": "PREVIEW",
-    "matchup": "Houston Astros vs Baltimore Orioles"
+  "824608": {
+    "state": "LIVE",
+    "matchup": "Los Angeles Angels vs Chicago White Sox"
   },
-  "824526": {
-    "state": "PREVIEW",
-    "matchup": "Colorado Rockies vs Cincinnati Reds"
-  },
-  "823390": {
-    "state": "PREVIEW",
-    "matchup": "St. Louis Cardinals vs Pittsburgh Pirates"
-  },
-  "823473": {
-    "state": "PREVIEW",
-    "matchup": "San Francisco Giants vs Philadelphia Phillies"
-  },
-  "822823": {
-    "state": "PREVIEW",
-    "matchup": "Boston Red Sox vs Toronto Blue Jays"
-  },
-  "823636": {
-    "state": "PREVIEW",
-    "matchup": "Washington Nationals vs New York Mets"
-  },
-  "824931": {
-    "state": "PREVIEW",
-    "matchup": "Detroit Tigers vs Atlanta Braves"
-  },
-  "823716": {
+  "823717": {
     "state": "PREVIEW",
     "matchup": "Seattle Mariners vs Minnesota Twins"
   },
-  "824610": {
-    "state": "PREVIEW",
-    "matchup": "Los Angeles Angels vs Chicago White Sox"
-  },
-  "823798": {
-    "state": "PREVIEW",
-    "matchup": "Arizona Diamondbacks vs Milwaukee Brewers"
-  },
-  "822908": {
+  "822907": {
     "state": "PREVIEW",
     "matchup": "New York Yankees vs Texas Rangers"
   },
-  "825017": {
+  "822821": {
     "state": "PREVIEW",
-    "matchup": "Kansas City Royals vs Athletics"
+    "matchup": "Boston Red Sox vs Toronto Blue Jays"
   },
-  "823310": {
+  "823958": {
+    "state": "PREVIEW",
+    "matchup": "Miami Marlins vs Los Angeles Dodgers"
+  },
+  "823312": {
     "state": "PREVIEW",
     "matchup": "Chicago Cubs vs San Diego Padres"
   },
-  "823956": {
+  "824850": {
     "state": "PREVIEW",
-    "matchup": "Miami Marlins vs Los Angeles Dodgers"
+    "matchup": "Houston Astros vs Baltimore Orioles"
+  },
+  "824525": {
+    "state": "PREVIEW",
+    "matchup": "Colorado Rockies vs Cincinnati Reds"
+  },
+  "823392": {
+    "state": "PREVIEW",
+    "matchup": "St. Louis Cardinals vs Pittsburgh Pirates"
+  },
+  "823471": {
+    "state": "PREVIEW",
+    "matchup": "San Francisco Giants vs Philadelphia Phillies"
+  },
+  "823633": {
+    "state": "PREVIEW",
+    "matchup": "Washington Nationals vs New York Mets"
+  },
+  "824930": {
+    "state": "PREVIEW",
+    "matchup": "Detroit Tigers vs Atlanta Braves"
+  },
+  "823796": {
+    "state": "PREVIEW",
+    "matchup": "Arizona Diamondbacks vs Milwaukee Brewers"
+  },
+  "825015": {
+    "state": "PREVIEW",
+    "matchup": "Kansas City Royals vs Athletics"
   }
 }
