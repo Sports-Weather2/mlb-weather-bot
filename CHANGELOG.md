@@ -5,6 +5,78 @@ All notable changes to the MLB Weather Monitoring System.
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ---
+## [2.0.10] - 2026-04-30
+
+### 🐛 Fixed
+
+#### `high-risk-alert-v2.yml` — `config.json` Not Committed After 10 AM Run
+- **Root cause:** Same issue as `weather-update-v2.yml` (fixed in
+  v2.0.9) — the commit step in `high-risk-alert-v2.yml` was also
+  missing `git add config.json || true`
+- **Impact:** The 10 AM high risk alert runs `update_schedule.py`
+  before checking weather — but the fresh `config.json` was never
+  committed back to the repo from this workflow either
+- **Fix:** Added `git add config.json || true` to the "Commit
+  tracking, analytics, and keep-alive" step — now both the 7 AM
+  and 10 AM workflows commit the fresh schedule
+
+### 🔧 Changed
+
+#### `update_schedule.py` — Defensive Venue Mappings Added
+- Added proactive safety mappings for known and potential venue
+  renames/alternate names to prevent future missing game issues
+- **`Daikin Park` → `Houston,US`** ✅ NEW
+  - Astros' Minute Maid Park may have been renamed — added
+    proactively before a home Astros game confirms it in the
+    MLB API response
+- **`LoanDepot Park` → `Miami,US`** ✅ NEW
+  - Alternate capitalization of `loanDepot park`
+- **`loanDepot Park` → `Miami,US`** ✅ NEW
+  - Alternate capitalization of `loanDepot park`
+- **`Loan Depot Park` → `Miami,US`** ✅ NEW
+  - Alternate spacing variant of `loanDepot park`
+
+### 🎯 Impact
+
+- **`config.json` now committed by both workflows** — 7 AM and
+  10 AM runs both persist the fresh schedule to the repo
+- **Zero unknown venue warnings** confirmed in April 29 run logs
+  — all 15 venues mapped correctly with no defaults to Phoenix
+- **Defensive mappings prevent future silent exclusions** — any
+  of the 4 new venue name variants will now map correctly instead
+  of defaulting to `Phoenix,US` (Chase Field retractable roof)
+  and being silently excluded from weather monitoring
+
+### 📊 Venue Audit — April 29, 2026
+
+Full venue log confirmed clean — zero unknown warnings:
+
+| Venue | Location | Status |
+|---|---|---|
+| Progressive Field | Cleveland,US | ✅ |
+| Rate Field | Chicago,US | ✅ Fixed v2.0.9 |
+| Target Field | Minneapolis,US | ✅ |
+| Globe Life Field | Arlington,US | ✅ |
+| Rogers Centre | Toronto,CA | ✅ Excluded dome |
+| UNIQLO Field at Dodger Stadium | Los Angeles,US | ✅ Fixed v2.0.9 |
+| Petco Park | San Diego,US | ✅ |
+| Oriole Park at Camden Yards | Baltimore,US | ✅ |
+| Great American Ball Park | Cincinnati,US | ✅ |
+| PNC Park | Pittsburgh,US | ✅ |
+| Citizens Bank Park | Philadelphia,US | ✅ |
+| Citi Field | New York,US | ✅ |
+| Truist Park | Atlanta,US | ✅ |
+| American Family Field | Milwaukee,US | ✅ |
+| Sutter Health Park | Oakland,US | ✅ |
+
+### 📋 Files Changed
+
+| File | Type | Summary |
+|---|---|---|
+| `high-risk-alert-v2.yml` | 🔧 Modified | Added `git add config.json \|\| true` to commit step |
+| `update_schedule.py` | 🔧 Modified | Added 4 defensive venue name mappings |
+
+---
 ## [2.0.9] - 2026-04-29
 
 ### 🐛 Fixed
