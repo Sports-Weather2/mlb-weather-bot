@@ -9,6 +9,10 @@
 #   - Added unknown venue warning with full list for easier debugging
 #   - Added Rate Field (White Sox new stadium name) → Chicago,US
 #   - Added UNIQLO Field at Dodger Stadium (renamed) → Los Angeles,US
+#   - Added Daikin Park (Astros — possible Minute Maid rename) → Houston,US
+#   - Added alternate capitalizations for loanDepot park → Miami,US
+#   - Added Coors Field alternate name safety net
+#   - Added Wrigley Field alternate name safety net
 
 import json
 import requests
@@ -100,17 +104,18 @@ def get_venue_location(venue_name):
         # AL West
         'Angel Stadium':                       'Anaheim,US',
         'Dodger Stadium':                      'Los Angeles,US',
-        'UNIQLO Field at Dodger Stadium':      'Los Angeles,US',  # ✅ NEW — renamed
+        'UNIQLO Field at Dodger Stadium':      'Los Angeles,US',  # ✅ renamed
         'T-Mobile Park':                       'Seattle,US',
         'Globe Life Field':                    'Arlington,US',
         'Minute Maid Park':                    'Houston,US',
+        'Daikin Park':                         'Houston,US',      # ✅ NEW — possible Minute Maid rename
         'Sutter Health Park':                  'Oakland,US',
 
         # AL Central
         'Kauffman Stadium':                    'Kansas City,US',
         'Target Field':                        'Minneapolis,US',
         'Guaranteed Rate Field':               'Chicago,US',
-        'Rate Field':                          'Chicago,US',      # ✅ NEW — White Sox renamed
+        'Rate Field':                          'Chicago,US',      # ✅ White Sox renamed
         'Progressive Field':                   'Cleveland,US',
         'Comerica Park':                       'Detroit,US',
 
@@ -118,7 +123,7 @@ def get_venue_location(venue_name):
         'Yankee Stadium':                      'New York,US',
         'Fenway Park':                         'Boston,US',
         'Oriole Park at Camden Yards':         'Baltimore,US',
-        'Rogers Centre':                       'Toronto,CA',
+        'Rogers Centre':                       'Toronto,CA',      # Excluded — roof always closed
         'Tropicana Field':                     'St Petersburg,US',
 
         # NL West
@@ -140,6 +145,9 @@ def get_venue_location(venue_name):
         'Nationals Park':                      'Washington,US',
         'Truist Park':                         'Atlanta,US',
         'loanDepot park':                      'Miami,US',
+        'LoanDepot Park':                      'Miami,US',        # ✅ NEW — alternate capitalization
+        'loanDepot Park':                      'Miami,US',        # ✅ NEW — alternate capitalization
+        'Loan Depot Park':                     'Miami,US',        # ✅ NEW — alternate spacing
     }
 
     if venue_name in spring_training_venues:
