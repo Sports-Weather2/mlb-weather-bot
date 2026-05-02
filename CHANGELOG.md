@@ -1,6 +1,3 @@
-Looking at your file I can see it has some formatting issues — the `[2.0.8]` entry is completely missing and there are some broken sections around `[2.0.9]` and `[2.0.5]`. Here's the complete corrected file:
-
-```markdown
 # Changelog
 
 All notable changes to the MLB Weather Monitoring System.
@@ -17,30 +14,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - **Root cause:** `last_weather_run.txt` was committed in the same
   git step as `analytics.json` and `ANALYTICS.md` — when the
   `mlb-status-monitor-v2.yml` ran simultaneously it caused a
-  **merge conflict on analytics files** during `git pull --rebase`
+  merge conflict on analytics files during `git pull --rebase`
   — the rebase failed, leaving the repo in detached HEAD state,
   and the push failed silently
-- **Symptom:** May 2, 2026 — daily report posted **twice**:
+- **Symptom:** May 2, 2026 — daily report posted twice:
   - Run #74 at 7:10 AM PT — posted correctly ✅
   - Run #75 at 7:55 AM PT — posted duplicate ❌
-  - Both were Scheduled cron triggers (6 AM + 7 AM backup)
-  - Run #74 commit logs showed:
-    `CONFLICT (content): Merge conflict in ANALYTICS.md`
-    `CONFLICT (content): Merge conflict in analytics.json`
-    `⚠️ WARNING: Push failed — dedup file may not persist`
+  - Run #74 commit logs showed merge conflicts in ANALYTICS.md
+    and analytics.json — push failed with warning
   - Run #75 saw old date in `last_weather_run.txt` because
     #74's push failed — thought it was first run and posted again
 - **Fix 1 — Separate dedup commit:** `last_weather_run.txt` now
-  commits in its **own dedicated step** ("Mark as ran today")
-  immediately after the weather bot runs — before analytics files
-  are touched. This simple commit has no conflict risk since no
-  other workflow writes to `last_weather_run.txt`
+  commits in its own dedicated step immediately after the weather
+  bot runs — before analytics files are touched. No conflict risk
+  since no other workflow writes to `last_weather_run.txt`
 - **Fix 2 — Rebase abort fallback:** Added `|| git rebase --abort
   || true` after `git pull --rebase` so the repo never gets stuck
   in detached HEAD state on conflict
 - **Fix 3 — Force-with-lease push:** Changed `git push` fallback
-  from silent warning to `git push --force-with-lease` which
-  handles cases where the remote has moved ahead
+  from silent warning to `git push --force-with-lease`
 
 ### 🎯 Impact
 
@@ -79,32 +71,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 - **Impact:** The 10 AM high risk alert runs `update_schedule.py`
   before checking weather — but the fresh `config.json` was never
   committed back to the repo from this workflow either
-- **Fix:** Added `git add config.json || true` to the "Commit
-  tracking, analytics, and keep-alive" step — now both the 7 AM
-  and 10 AM workflows commit the fresh schedule
+- **Fix:** Added `git add config.json || true` to the commit step
 
 ### 🔧 Changed
 
 #### `update_schedule.py` — Defensive Venue Mappings Added
-- Added proactive safety mappings for known and potential venue
-  renames/alternate names to prevent future missing game issues
-- **`Daikin Park` → `Houston,US`** ✅ NEW
-  - Astros' Minute Maid Park may have been renamed — added
-    proactively before a home Astros game confirms it in the
-    MLB API response
-- **`LoanDepot Park` → `Miami,US`** ✅ NEW
-  - Alternate capitalization of `loanDepot park`
-- **`loanDepot Park` → `Miami,US`** ✅ NEW
-  - Alternate capitalization of `loanDepot park`
-- **`Loan Depot Park` → `Miami,US`** ✅ NEW
-  - Alternate spacing variant of `loanDepot park`
+- **`Daikin Park` → `Houston,US`** ✅ NEW — possible Minute Maid rename
+- **`LoanDepot Park` → `Miami,US`** ✅ NEW — alternate capitalization
+- **`loanDepot Park` → `Miami,US`** ✅ NEW — alternate capitalization
+- **`Loan Depot Park` → `Miami,US`** ✅ NEW — alternate spacing
 
 ### 🎯 Impact
 
 - **`config.json` now committed by both workflows** — 7 AM and
   10 AM runs both persist the fresh schedule to the repo
-- **Zero unknown venue warnings** confirmed in April 29 run logs
-  — all 15 venues mapped correctly with no defaults to Phoenix
 - **Defensive mappings prevent future silent exclusions**
 
 ### 📊 Venue Audit — April 29, 2026
@@ -141,60 +121,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 ### 🐛 Fixed
 
 #### `weather-update-v2.yml` — `config.json` Never Committed to Repo
-- **Root cause:** The commit step in `weather-update-v2.yml` was
-  missing `git add config.json || true` — `update_schedule.py`
-  wrote fresh schedule data to `config.json` on the GitHub Actions
-  VM every morning but it was never committed back to the repo
-- **Symptom:** `config.json` was permanently stuck on
-  **March 6, 2026 Spring Training data** — every daily report
-  and high risk alert was running against 6-week-old game data
-  meaning many Regular Season games were completely missing
-  from weather monitoring
+- **Root cause:** The commit step was missing `git add config.json
+  || true` — `update_schedule.py` wrote fresh schedule data to
+  `config.json` on the GitHub Actions VM every morning but it was
+  never committed back to the repo
+- **Symptom:** `config.json` was permanently stuck on March 6,
+  2026 Spring Training data — every daily report and high risk
+  alert was running against 6-week-old game data
 - **Real-world impact:** April 29 daily report missed:
   - Angels vs White Sox (Rate Field)
   - Marlins vs Dodgers (UNIQLO Field at Dodger Stadium)
-  - And potentially many other games since Regular Season started
-- **Fix:** Added `git add config.json || true` to the
-  "Commit run tracking, analytics, and keep-alive" step in
-  `weather-update-v2.yml`
+- **Fix:** Added `git add config.json || true` to the commit step
 
 #### `update_schedule.py` — Two Missing Venue Mappings
 - **`Rate Field` → `Chicago,US`** ✅ NEW
-  - White Sox renamed their stadium from Guaranteed Rate Field
-    to Rate Field — MLB API now returns `"Rate Field"` which
-    was not in the venue mapping, causing it to fall through
-    to the `Phoenix,US` default → incorrectly mapped to
-    Chase Field (retractable roof) → excluded from weather
-    monitoring entirely
+  - White Sox renamed stadium — MLB API returns `"Rate Field"`
+    which was not mapped, defaulting to `Phoenix,US` and being
+    excluded as a roof stadium
 - **`UNIQLO Field at Dodger Stadium` → `Los Angeles,US`** ✅ NEW
-  - Dodger Stadium was renamed with a sponsorship prefix —
-    MLB API now returns `"UNIQLO Field at Dodger Stadium"`
-    which was not mapped, also falling to `Phoenix,US` default
-
-#### `last_weather_run.txt` — Manual Reset Required Today
-- File was cleared manually on April 29 to force a fresh run
-  after discovering the stale `config.json` issue
-- Going forward this should not be needed
-
-### 🔧 Changed
-
-#### `weather-update-v2.yml` — Added `config.json` to Commit Step
-- Added `git add config.json || true` to commit step
+  - Dodger Stadium renamed with sponsorship prefix — same
+    exclusion issue as Rate Field
 
 ### 🎯 Impact
 
-- **`config.json` now updates daily** — always reflects today's
-  actual MLB schedule, never stale
-- **All games now correctly monitored** — no more missing games
-  due to venue mapping failures
+- **`config.json` now updates daily** — always reflects current schedule
+- **All games now correctly monitored**
 - **Root cause of missing games resolved**
 
 ### 📊 Venue Mapping — Full Fix Summary
 
 | Venue | Old Mapping | New Mapping | Impact |
 |---|---|---|---|
-| `Rate Field` | ❌ Phoenix,US (Chase Field roof) | ✅ Chicago,US | White Sox now monitored |
-| `UNIQLO Field at Dodger Stadium` | ❌ Phoenix,US (Chase Field roof) | ✅ Los Angeles,US | Dodgers now monitored |
+| `Rate Field` | ❌ Phoenix,US | ✅ Chicago,US | White Sox now monitored |
+| `UNIQLO Field at Dodger Stadium` | ❌ Phoenix,US | ✅ Los Angeles,US | Dodgers now monitored |
 
 ### 📋 Files Changed
 
@@ -211,26 +170,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 #### `weather_bot.py` — MONITOR Rain Threshold Lowered: 45% → 35%
 - **Root cause:** MONITOR threshold of 45% was missing games that
-  PropFinder (propfinder.app/weather) flagged as 🟡 Yellow
-  (Chance For Delay) in the 30-44% rain probability range
-- **Evidence:** April 29, 2026 cross-check against PropFinder
-  showed two gaps:
-  - PNC Park — 30% rain → PropFinder 🟡 Yellow → Bot 🟢 CLEAR ❌
-  - Rate Field — 18% rain → PropFinder 🟡 Yellow → Bot 🟢 CLEAR
-- **Fix:** Lowered `monitor` section `rain_prob` from 45 → 35
-  in `IMPACT_RULES` in `weather_bot.py`
-- **Only affects `#gameday-weather`** — MONITOR tier only appears
-  in the 7 AM daily report. `#high-risk-weather-alert` and HIGH
-  RISK threshold (≥80%) are completely unchanged
-- `high_risk_alert.py` not affected — that file has no `monitor`
-  section
+  PropFinder flagged as Yellow (Chance For Delay) in the 30-44%
+  rain probability range
+- **Evidence:** April 29 cross-check against PropFinder showed:
+  - PNC Park — 30% rain → PropFinder Yellow → Bot CLEAR ❌
+  - Rate Field — 18% rain → PropFinder Yellow → Bot CLEAR
+- **Fix:** Lowered `monitor` rain_prob from 45 → 35
+- **Only affects #gameday-weather** — HIGH RISK threshold (≥80%)
+  and `#high-risk-weather-alert` completely unchanged
+- `high_risk_alert.py` not affected — no `monitor` section
 
 ### 🎯 Impact
 
-- **30-44% rain games now show as 🟡 MONITOR** instead of 🟢 CLEAR
-  — better alignment with PropFinder Yellow tier
-- **No change to HIGH RISK alerts** — threshold remains ≥80%
-- **No change to `#high-risk-weather-alert`** — unaffected
+- **30-44% rain games now show as MONITOR** — better alignment
+  with PropFinder Yellow tier
+- **No change to HIGH RISK alerts**
+- **No change to #high-risk-weather-alert**
 
 ### 📊 Updated MONITOR Thresholds
 
@@ -239,17 +194,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 | Rain probability | ≥45% | ≥35% |
 | Wind sustained | ≥20 mph | ≥20 mph (unchanged) |
 | Temperature | 40–95°F | 40–95°F (unchanged) |
-
-### 📊 PropFinder Alignment (After Fix)
-
-| Rain % | PropFinder | Old Bot | New Bot |
-|---|---|---|---|
-| 30% | 🟡 Yellow | 🟢 CLEAR ❌ | 🟡 MONITOR ✅ |
-| 35% | 🟡 Yellow | 🟢 CLEAR ❌ | 🟡 MONITOR ✅ |
-| 40% | 🟡 Yellow | 🟢 CLEAR ❌ | 🟡 MONITOR ✅ |
-| 45% | 🟡 Yellow | 🟡 MONITOR ✅ | 🟡 MONITOR ✅ |
-| 59% | 🟠 Orange | 🟡 MONITOR ✅ | 🟡 MONITOR ✅ |
-| 80% | 🔴 Red | 🔴 HIGH RISK ✅ | 🔴 HIGH RISK ✅ |
 
 ### 📋 Files Changed
 
@@ -265,21 +209,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 #### `weather_bot.py` + `high_risk_alert.py` — "Chance Showers And Thunderstorms" Still Triggering HIGH RISK
 - **Root cause:** The `is_slight_chance` exclusion list checked for
-  `"chance thunderstorm"` as an exact substring — but NWS forecast
-  text `"Chance Showers And Thunderstorms"` contains the word
-  "Showers And" between "Chance" and "Thunderstorms", so it did
-  not match the exclusion string and slipped through as a real
-  thunderstorm threat
-- **Symptom:** April 25, 2026 alert flagged Phillies vs Braves
-  at Truist Park as HIGH RISK with only **49% rain probability**
-  because NWS returned `"Chance Showers And Thunderstorms"` —
-  cross-checked against PropFinder (propfinder.app/weather)
-  which showed the same game as 🟡 Yellow (Chance For Delay),
-  not red HIGH RISK
+  `"chance thunderstorm"` but NWS forecast text
+  `"Chance Showers And Thunderstorms"` has "Showers And" between
+  "Chance" and "Thunderstorms" so it did not match
+- **Symptom:** April 25 alert flagged Phillies vs Braves as HIGH
+  RISK with only 49% rain — PropFinder showed same game as Yellow
 - **Cross-check result:** 13 of 14 games correct (93% accuracy)
-  before this fix — this was the one remaining false positive
-- **Fix:** Added two new strings to `is_slight_chance` exclusion
-  list in `get_weather_forecast()` in both files:
+  before fix — this was the one remaining false positive
+- **Fix:** Added two new strings to `is_slight_chance` list:
   - `'chance showers and thunderstorm'`
   - `'chance shower'`
 
@@ -287,29 +224,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 #### Thunderstorm Exclusion List — Both Files
 
-Full updated `is_slight_chance` list (8 items, was 6):
+Full `is_slight_chance` list (8 items, was 6):
 
-- `'slight chance'` — Slight Chance Thunderstorms
-- `'isolated'` — Isolated Thunderstorms
-- `'chance thunderstorm'` — Chance Thunderstorms
-- `'chance of thunderstorm'` — Chance Of Thunderstorms
-- `'few thunderstorm'` — Few Thunderstorms
-- `'scattered thunderstorm'` — Scattered Thunderstorms *(added v2.0.4)*
-- `'chance showers and thunderstorm'` — ✅ NEW
-- `'chance shower'` — ✅ NEW
+- `'slight chance'`
+- `'isolated'`
+- `'chance thunderstorm'`
+- `'chance of thunderstorm'`
+- `'few thunderstorm'`
+- `'scattered thunderstorm'` *(added v2.0.4)*
+- `'chance showers and thunderstorm'` ✅ NEW
+- `'chance shower'` ✅ NEW
 
 #### `analytics.json` — Accuracy Counters Reset to Clean Baseline
-- All accuracy counters reset to 0
+- All counters reset to 0 — clean tracking from April 25 forward
 - `high_risk_predictions.json` and `false_positive_logged.json`
-  also cleared to `{}`
+  cleared to `{}`
 
 ### 🎯 Impact
 
 - **"Chance Showers And Thunderstorms" no longer triggers HIGH RISK**
 - **All known thunderstorm false positive patterns now excluded**
-- **Accuracy baseline reset** — clean data collection starts today
+- **Accuracy baseline reset**
 
-### 📊 NWS Forecast Text — Full Exclusion Coverage (After Fix)
+### 📊 NWS Forecast Text — Exclusion Coverage After Fix
 
 | NWS Forecast Text | Rain % | Result |
 |---|---|---|
@@ -317,10 +254,8 @@ Full updated `is_slight_chance` list (8 items, was 6):
 | Chance Thunderstorms | 35% | 🟢 CLEAR ✅ |
 | Slight Chance Thunderstorms | 19% | 🟢 CLEAR ✅ |
 | Scattered Thunderstorms | 45% | 🟢 CLEAR ✅ |
-| Isolated Thunderstorms | 30% | 🟢 CLEAR ✅ |
 | Showers And Thunderstorms | 80% | 🔴 HIGH RISK ✅ |
 | Thunderstorms | 85% | 🔴 HIGH RISK ✅ |
-| Heavy Rain | 88% | 🔴 HIGH RISK ✅ |
 
 ### 📋 Files Changed
 
@@ -328,7 +263,7 @@ Full updated `is_slight_chance` list (8 items, was 6):
 |---|---|---|
 | `weather_bot.py` | 🔧 Modified | Added 2 strings to `is_slight_chance` exclusion list |
 | `high_risk_alert.py` | 🔧 Modified | Same fix — identical change |
-| `analytics.json` | 🔧 Modified | Accuracy counters reset to 0 — clean baseline |
+| `analytics.json` | 🔧 Modified | Accuracy counters reset to 0 |
 
 ---
 
@@ -337,23 +272,22 @@ Full updated `is_slight_chance` list (8 items, was 6):
 ### 🔧 Changed
 
 #### `weather_bot.py` — MONITOR Wind Threshold Raised: 15 mph → 20 mph
-- **Root cause:** `wind_sustained` threshold of 15 mph was too
-  sensitive — triggering MONITOR alerts on clear sunny days with
-  0-12% rain probability
-- **Symptom:** April 23, 2026 daily report showed 2 games as
-  🟡 MONITOR with perfectly clear conditions:
-  - Phillies vs Cubs — 0% rain, 78°F, 15 mph wind → MONITOR ❌
-  - Padres vs Rockies — 12% rain, 63°F, 17 mph wind → MONITOR ❌
+- **Root cause:** 15 mph threshold triggered MONITOR on clear days
+  with 0-12% rain where wind had zero game impact
+- **Symptom:** Two games showing MONITOR on perfectly clear days:
+  - Phillies vs Cubs — 0% rain, 78°F, 15 mph → MONITOR ❌
+  - Padres vs Rockies — 12% rain, 63°F, 17 mph → MONITOR ❌
 - **Fix:** Raised `wind_sustained` from 15 → 20 mph
+- `high_risk_alert.py` not affected — no `monitor` section
 
 ### 🎯 Impact
 
-- **Fewer false MONITOR alerts** on clear days with light wind
+- **Fewer false MONITOR alerts** on clear breezy days
 - **MONITOR now reserved for genuinely concerning conditions**
 
 ### 📊 Updated MONITOR Thresholds
 
-| Condition | Old Threshold | New Threshold |
+| Condition | Old | New |
 |---|---|---|
 | Wind sustained | ≥15 mph | ≥20 mph |
 | Rain probability | ≥45% | ≥45% (unchanged) |
@@ -363,7 +297,7 @@ Full updated `is_slight_chance` list (8 items, was 6):
 
 | File | Type | Summary |
 |---|---|---|
-| `weather_bot.py` | 🔧 Modified | `wind_sustained` raised 15 → 20 mph in MONITOR thresholds |
+| `weather_bot.py` | 🔧 Modified | `wind_sustained` raised 15 → 20 mph |
 
 ---
 
@@ -371,24 +305,26 @@ Full updated `is_slight_chance` list (8 items, was 6):
 
 ### 🔧 Changed
 
-#### `weather_bot.py` + `high_risk_alert.py` — Priority 1: Tightened Thresholds
-- **Rain threshold raised: 75% → 80%**
-- **Added `'scattered thunderstorm'` to slight chance list**
+#### `weather_bot.py` + `high_risk_alert.py` — Three Improvements
 
-#### `weather_bot.py` + `high_risk_alert.py` — Priority 2: "Why Triggered" Reason Line
+**Priority 1 — Tightened Thresholds**
+- Rain threshold raised: 75% → 80%
+- Added `'scattered thunderstorm'` to slight chance exclusion list
+
+**Priority 2 — Why Triggered Reason Line**
 - Every HIGH RISK alert now includes a `📋 Why:` line
 - Examples:
   - `📋 Why: Rain 81% ≥ 80% threshold`
   - `📋 Why: Active thunderstorms + Rain 45%`
   - `📋 Why: Wind 32 mph ≥ 30 mph threshold`
 
-#### `weather_bot.py` + `high_risk_alert.py` — Priority 4: Delay Probability Language
+**Priority 4 — Delay Probability Language**
 - Every HIGH RISK alert now includes a `🎯 Delay Probability:` line
 - Four tiers:
-  - `🔴 VERY HIGH — Delay or postponement likely`
-  - `🟠 HIGH — Delay probable at game time`
-  - `🟡 ELEVATED — Conditions may impact play`
-  - `🟡 ELEVATED — Extreme cold may impact play`
+  - `🔴 VERY HIGH — Delay or postponement likely` (rain ≥90%)
+  - `🟠 HIGH — Delay probable at game time` (rain ≥80%)
+  - `🟡 ELEVATED — Conditions may impact play` (storms or wind)
+  - `🟡 ELEVATED — Extreme cold may impact play` (temp ≤35°F)
 
 #### `high_risk_alert.py` — Slack Footer Updated
 - Footer updated to reflect new 80% threshold
@@ -396,17 +332,16 @@ Full updated `is_slight_chance` list (8 items, was 6):
 ### 🎯 Impact
 
 - **Fewer false HIGH RISK alerts** — 80% threshold
-- **Full transparency on every alert** — Why-triggered line
-- **Delay severity context** — ops team knows delay probability
+- **Full transparency** — team sees exactly why alert fired
+- **Delay severity context** — know how seriously to treat each alert
 - **Real-time delay alerts unaffected**
 
 ### 📊 Threshold Changes
 
-| Condition | Old Threshold | New Threshold |
+| Condition | Old | New |
 |---|---|---|
 | Rain HIGH RISK | ≥75% | ≥80% |
 | Scattered Thunderstorms | Triggered HIGH RISK | ✅ Now ignored |
-| Thunderstorms + Rain | ≥40% rain required | ≥40% rain required (unchanged) |
 
 ### 📋 Files Changed
 
@@ -421,30 +356,31 @@ Full updated `is_slight_chance` list (8 items, was 6):
 
 ### 🐛 Fixed
 
-#### `weather_bot.py` + `high_risk_alert.py` — False HIGH RISK Alerts from "Slight Chance Thunderstorms"
-- **Root cause:** Thunderstorm detection used a broad keyword match
-- **Symptom:** Atlanta Braves vs Washington Nationals flagged as
-  HIGH RISK on April 22, 2026 with only **19% rain probability**
+#### `weather_bot.py` + `high_risk_alert.py` — False HIGH RISK from "Slight Chance Thunderstorms"
+- **Root cause:** Any forecast containing "thunder/tstm/lightning/
+  storm" triggered HIGH RISK regardless of rain probability
+- **Symptom:** Braves vs Nationals flagged HIGH RISK at only 19%
+  rain — "Slight Chance Showers And Thunderstorms" triggered alert
 - **Real-world impact:** Team manually extended Yankees vs Red Sox
-  EPG listings — system missed actual high-risk game
+  EPG — system missed actual high-risk game
 - **Fix — Two conditions now required:**
   1. Forecast must NOT contain a low-probability qualifier
-  2. Rain probability must be **≥40%**
+  2. Rain probability must be ≥40%
 
 ### 🔧 Changed
 
 #### Thunderstorm Detection Logic — Both Files
 - Old: any "thunder/tstm/lightning/storm" → HIGH RISK
-- New: requires no slight-chance qualifier AND rain ≥40%
+- New: no slight-chance qualifier AND rain ≥40% required
 
 ### 🎯 Impact
 
 - **"Slight Chance Thunderstorms" no longer triggers HIGH RISK**
 - **Thunderstorm alert now requires actual weather threat**
 
-### 📊 Thunderstorm Alert Behavior (After Fix)
+### 📊 Thunderstorm Alert Behavior After Fix
 
-| NWS Forecast | Rain % | Old Result | New Result |
+| NWS Forecast | Rain % | Old | New |
 |---|---|---|---|
 | Slight Chance Showers And Thunderstorms | 19% | 🔴 HIGH RISK ❌ | 🟢 CLEAR ✅ |
 | Chance Thunderstorms | 45% | 🔴 HIGH RISK ❌ | 🔴 HIGH RISK ✅ |
@@ -456,7 +392,7 @@ Full updated `is_slight_chance` list (8 items, was 6):
 | File | Type | Summary |
 |---|---|---|
 | `weather_bot.py` | 🔧 Modified | Smarter thunderstorm detection |
-| `high_risk_alert.py` | 🔧 Modified | Same thunderstorm fix + Slack footer updated |
+| `high_risk_alert.py` | 🔧 Modified | Same fix + Slack footer updated |
 
 ---
 
@@ -465,30 +401,32 @@ Full updated `is_slight_chance` list (8 items, was 6):
 ### 🐛 Fixed
 
 #### `mlb_game_status_monitor.py` — False Positive Counter Inflating Every 10 Minutes
-- **Root cause:** `check_and_log_false_positives()` called at
-  end of every 10-minute monitoring cycle
-- **Symptom:** `false_positives` counter reached **406** in
-  `analytics.json` after only 2 days
-- **Fix:** Rewrote to only log once per game when `STATE_FINAL`
+- **Root cause:** `check_and_log_false_positives()` called at end
+  of every 10-minute cycle — logged false positive every cycle
+  instead of once
+- **Symptom:** `false_positives` counter reached 406 after only
+  2 days — accuracy dashboard completely unusable
+- **Fix:** Rewrote to only log once when game reaches `STATE_FINAL`
 - **New file `false_positive_logged.json`** prevents double counting
 
 #### `mlb-status-monitor-v2.yml` — Two Fixes
-- **Fix 1:** `SLACK_WEBHOOK` → `HIGH_RISK_WEBHOOK_URL`
+- **Fix 1:** `SLACK_WEBHOOK` env var renamed to `HIGH_RISK_WEBHOOK_URL`
+  — was causing `Invalid URL 'None'` error on all real-time alerts
 - **Fix 2:** Added `git add false_positive_logged.json || true`
 
 #### `analytics.json` — False Positive Counter Reset
-- `false_positives` reset from `406` → `0`
+- `false_positives` manually reset from 406 → 0
 
 ### 🎯 Impact
 
 - **False positive counter now accurate**
 - **Real-time delay alerts now posting correctly**
 
-### 📊 Accuracy Dashboard (After Fix)
+### 📊 Accuracy Dashboard After Fix
 
 | Metric | Before | After |
 |---|---|---|
-| False Positives | 406 ❌ | 0 ✅ Reset |
+| False Positives | 406 ❌ | 0 ✅ |
 | Accuracy Rate | 0.0% | 100% ✅ |
 
 ### 📋 Files Changed
@@ -505,28 +443,27 @@ Full updated `is_slight_chance` list (8 items, was 6):
 
 ### 🔧 Changed
 
-#### `weather-update-v2.yml` — Removed Stale Secret Reference
-- Removed `WEATHER_API_KEY` from `Run weather bot` step
+#### `weather-update-v2.yml` — Removed Stale `WEATHER_API_KEY` Reference
+- Removed from `Run weather bot` step env block
 
 #### `test_venues.py` — Full Rewrite for NWS API
 - Replaced OpenWeatherMap with NWS API
 - Replaced zip codes with lat/lon coordinates
 - Organized into 5 clearly labeled sections
 
-#### `test-venues.yml` — Removed Stale Secret Reference
-- Removed entire `env` block — NWS needs no API key
+#### `test-venues.yml` — Removed Stale `WEATHER_API_KEY` Reference
+- Entire `env` block removed — NWS needs no API key
 
 ### 🗑️ Removed
 
-#### All Remaining `WEATHER_API_KEY` References — Fully Purged
 - Zero `WEATHER_API_KEY` references remain anywhere in the repo
 
 ### 📋 Files Changed
 
 | File | Type | Summary |
 |---|---|---|
-| `weather-update-v2.yml` | 🔧 Modified | Removed stale `WEATHER_API_KEY` env var |
-| `test_venues.py` | 🔧 Rewritten | Full NWS rewrite |
+| `weather-update-v2.yml` | 🔧 Modified | Removed stale `WEATHER_API_KEY` |
+| `test_venues.py` | 🔧 Rewritten | Full NWS rewrite — lat/lon, no API key |
 | `test-venues.yml` | 🔧 Modified | Removed `WEATHER_API_KEY` env block |
 
 ---
@@ -536,12 +473,14 @@ Full updated `is_slight_chance` list (8 items, was 6):
 ### 🐛 Fixed
 
 #### `high-risk-alert-v2.yml` — Prediction Accuracy Tracking Broken
-- **Root cause:** `high_risk_predictions.json` never committed
-- **Symptom:** Accuracy dashboard showing 0.0%
+- **Root cause:** `high_risk_predictions.json` never committed —
+  predictions written locally but lost on VM teardown
+- **Symptom:** Accuracy dashboard showing 0.0% — all 5 delays
+  logged as False Negatives
 - **Fix:** Added `git add high_risk_predictions.json || true`
 
-#### `high-risk-alert-v2.yml` — Stale Secret Reference
-- Removed `WEATHER_API_KEY` — no longer needed
+#### `high-risk-alert-v2.yml` — Stale `WEATHER_API_KEY` Reference
+- Removed — secret already deleted, causing silent empty env var
 
 #### `analytics.json` — Accuracy Counters Reset
 - All counters reset to clean baseline
@@ -555,9 +494,9 @@ Full updated `is_slight_chance` list (8 items, was 6):
 |---|---|---|
 | 1. Game PKs written to config | `update_schedule.py` | ✅ Fixed in v2.0.0 |
 | 2. Predictions saved at 10 AM | `high_risk_alert.py` | ✅ Working |
-| 3. Predictions committed to repo | `high-risk-alert-v2.yml` | ✅ Fixed in v2.0.1 |
-| 4. Delay detected by monitor | `mlb_game_status_monitor.py` | ✅ Working |
-| 5. Accuracy logged to analytics | `analytics.py` | ✅ Working |
+| 3. Predictions committed | `high-risk-alert-v2.yml` | ✅ Fixed in v2.0.1 |
+| 4. Delay detected | `mlb_game_status_monitor.py` | ✅ Working |
+| 5. Accuracy logged | `analytics.py` | ✅ Working |
 
 ### 📋 Files Changed
 
@@ -572,19 +511,13 @@ Full updated `is_slight_chance` list (8 items, was 6):
 
 ### ✨ Added
 
-#### `weather_bot.py` — NWS Stadium Coordinates Dictionary
+#### `weather_bot.py` + `high_risk_alert.py` — NWS Migration
 - New `STADIUM_COORDINATES` dict with lat/lon for all 29 US stadiums
-- Replaces city string queries with precise GPS coordinates
-
-#### `weather_bot.py` — NWS Fetch Functions
 - New `get_nws_hourly_forecast_url()` — two-step NWS lookup
 - `get_weather_forecast()` fully rewritten to use NWS
-- Targets exact game start hour
+- Targets exact game start hour — not a 3-hour bucket
 
-#### `high_risk_alert.py` — NWS Stadium Coordinates Dictionary
-- Same `STADIUM_COORDINATES` dict as `weather_bot.py`
-
-#### `update_schedule.py` — Missing Venue Mappings + `game_pk`
+#### `update_schedule.py` — Missing Venues + `game_pk`
 - Added `Sutter Health Park`, `Salt River Fields at Talking Stick`,
   `JetBlue Park at Fenway South`
 - Removed stale `Oakland Coliseum`
@@ -606,6 +539,7 @@ Full updated `is_slight_chance` list (8 items, was 6):
 | Accuracy | ~85% | ~92–95% US hourly |
 | Granularity | 3-hour buckets | True hourly periods |
 | Game time targeting | Closest 3-hr bucket | Exact game start hour |
+| Location format | City string | Lat/lon coordinates |
 
 #### Thresholds — Tightened for NWS Precision
 
@@ -617,7 +551,7 @@ Full updated `is_slight_chance` list (8 items, was 6):
 
 ### 🗑️ Removed
 
-- `WEATHER_API_KEY` GitHub Secret
+- `WEATHER_API_KEY` GitHub Secret — deleted from repo settings
 - Toronto Blue Jays moved from Retractable to Fixed Dome
 
 ### 🎯 Impact
@@ -627,24 +561,15 @@ Full updated `is_slight_chance` list (8 items, was 6):
 - **Zero API cost change**
 - **No API key to manage**
 
-### 📊 Weather API Comparison
-
-| | OpenWeatherMap | NWS |
-|---|---|---|
-| **Annual Cost** | $0 | $0 |
-| **API Key** | Required | Not required |
-| **Accuracy** | ~85% | ~92–95% |
-| **Granularity** | 3-hour buckets | True hourly |
-
 ### 📋 Files Changed
 
 | File | Type | Summary |
 |---|---|---|
-| `weather_bot.py` | 🔧 Modified | NWS API, coords dict, thresholds |
-| `high_risk_alert.py` | 🔧 Modified | NWS API, coords dict, thresholds |
-| `update_schedule.py` | 🔧 Modified | `game_pk`, missing venues, timeout |
-| `mlb_game_status_monitor.py` | 🔧 Modified | Request timeouts |
-| `analytics.py` | 🔧 Modified | OWM → NWS text |
+| `weather_bot.py` | 🔧 Modified | NWS API, coords dict, tightened thresholds |
+| `high_risk_alert.py` | 🔧 Modified | NWS API, coords dict, tightened thresholds |
+| `update_schedule.py` | 🔧 Modified | `game_pk`, missing venues, timeout, venue log |
+| `mlb_game_status_monitor.py` | 🔧 Modified | Request timeouts added |
+| `analytics.py` | 🔧 Modified | OWM → NWS text in STATUS.md |
 
 ---
 
@@ -655,16 +580,18 @@ Full updated `is_slight_chance` list (8 items, was 6):
 #### `analytics.py` — Auto-Generate `STATUS.md`
 - New `generate_status_markdown()` function
 - `save_analytics()` now calls both markdown generators
-- All three files always stay in sync
+- Running `python analytics.py` regenerates both ANALYTICS.md
+  and STATUS.md
 
 #### All Three Workflows — `STATUS.md` Auto-Commit
 - Added `git add STATUS.md || true` to all commit steps
 
 ### 🎯 Impact
-- **`STATUS.md` never goes stale**
+
+- **STATUS.md never goes stale** — auto-updates every workflow run
 - **Zero manual maintenance required**
 
-### 📊 Auto-Update Coverage
+### 📊 Auto-Update Coverage After Fix
 
 | File | Updated By | Frequency |
 |---|---|---|
@@ -681,11 +608,14 @@ Full updated `is_slight_chance` list (8 items, was 6):
 #### External Cron Trigger via `cron-job.org`
 - **Problem:** GitHub Actions cron delayed 30-60 min during peak hours
 - **Solution:** `cron-job.org` triggers monitor every 10 min via
-  `workflow_dispatch` — bypassing GitHub's unreliable scheduler
+  `workflow_dispatch` — bypasses GitHub's unreliable scheduler
+- **Config:** POST to GitHub API every 10 min, body `{"ref":"main"}`
 
 ### 🎯 Impact
+
 - **Guaranteed 10-minute detection cycles**
-- **Rain delays detected within 10 minutes**
+- **Rain delays detected within 10 minutes of MLB API updating**
+- **Zero code changes to Python scripts**
 
 ### 📊 Monitoring Reliability
 
@@ -694,6 +624,7 @@ Full updated `is_slight_chance` list (8 items, was 6):
 | Trigger source | GitHub cron (unreliable) | cron-job.org (reliable) |
 | Typical delay | 30–60 min | ~10 min guaranteed |
 | Manual triggers needed | Yes | No |
+| Backup trigger | None | GitHub native cron |
 
 ---
 
@@ -704,62 +635,78 @@ Full updated `is_slight_chance` list (8 items, was 6):
 #### `mlb-status-monitor-v2.yml` — Commit Step Failing with Exit Code 1
 - Split `git add` into individual lines with `|| true`
 - Removed `git diff --quiet &&` from commit condition
-- Added `|| true` to `git commit`
+- Added `|| true` to `git commit` itself
 
 ### 🎯 Impact
+
 - Commit step no longer fails the job
+- State and analytics now reliably committed every run
 
 ---
 
 ## [1.3.3] - 2026-04-08
 
 ### 🐛 Fixed
+
 - All Three Workflows — Skipped Run Analytics Not Logged
 - `weather-update-v2.yml` — Analytics Never Committed
+- `weather-update-v2.yml` — Silent Push Failure Risk
 - `high_risk_alert.py` — Games Monitored Double Counting
 
 ### 🎯 Impact
+
 - Skipped Runs now accurately tracked
 - Games Monitored no longer double counted
+- Daily report analytics now persist correctly
 
 ---
 
 ## [1.3.2] - 2026-04-08
 
 ### ✨ Added
+
 - `high_risk_alert.py` — Games Monitored Tracking
 - `mlb-status-monitor-v2.yml` — Skipped Run Tracking
 - `analytics.py` — Accurate Key Insights Calculations
 
 ### 🐛 Fixed
-- Analytics Dashboard — all metrics showing incorrect values
+
+- Games Monitored showing 0 — Fixed
+- Skipped Runs showing 0 — Fixed
+- Average Alerts/Day diluted by off-days — Fixed
+- Time Saved / Estimated Value not tied to real data — Fixed
 
 ---
 
 ## [1.3.1] - 2026-04-08
 
 ### ✨ Added
+
 - `high_risk_alert.py` — `save_high_risk_predictions()`
 - `mlb_game_status_monitor.py` — `check_and_log_prediction_accuracy()`
 - `mlb_game_status_monitor.py` — `check_and_log_false_positives()`
-- `mlb-status-monitor-v2.yml` — Predictions File Persistence
+- `mlb-status-monitor-v2.yml` — Predictions file persistence
 
 ### 🎯 Impact
+
 - Prediction Accuracy dashboard now populates automatically
+- Full accuracy loop closed
 
 ---
 
 ## [1.3.0] - 2026-04-08
 
 ### 🐛 Fixed
+
 - CRITICAL: "RAIN DELAY DETECTED" firing on Postponed games
-- CRITICAL: Duplicate alerts every 10 minutes
+- CRITICAL: Duplicate alerts firing every 10 minutes
 - CRITICAL: `game_states.json` not persisting between runs
 - Added `STATE_SUSPENDED` handling
 
 ### 🎯 Impact
-- Zero duplicate alerts
-- Correct alert types
+
+- Zero duplicate alerts for Postponed or Delayed games
+- Correct alert types — Postponed always shows GAME POSTPONED
 - State survives across GitHub Actions runs
 
 ---
@@ -767,42 +714,35 @@ Full updated `is_slight_chance` list (8 items, was 6):
 ## [1.2.2] - 2026-04-08
 
 ### 🔧 Changed
-- Retractable Roof Unknown Status: Unknown → Skip
+
+- Retractable Roof Unknown Status: Unknown → Skip (was Alert)
+- Reduces false positives for retractable roof stadiums
 
 ---
 
 ## [1.2.1] - 2026-03-29
 
 ### 🔧 Changed
+
 - Cold temp HIGH RISK threshold: 35°F → 20°F
+- Reduces false HIGH RISK alerts for early-season cold games
 
 ---
 
 ## [1.2.0] - 2026-03-28
 
 ### ✨ Added
+
 - Roof-Aware Weather Filtering
 - Fixed domes excluded, retractable roofs checked via MLB API
-- ~27% reduction in false alerts
+- ~27% reduction in unnecessary weather alerts
 
 ---
 
 ## [1.1.1] - 2026-03-26
 
 ### 🔧 Fixed
+
 - Analytics not updating — added missing git commit steps
 - Added game status analytics tracking to `mlb_game_status_monitor.py`
-```
-
----
-
-## ✅ What Was Fixed in This File
-
-| Issue | Fix |
-|---|---|
-| `[2.0.8]` completely missing | ✅ Added |
-| `[2.0.9]` had broken code block that swallowed `[2.0.8]` | ✅ Fixed |
-| `[2.0.5]` had broken code block sample | ✅ Removed — replaced with clean text |
-| Older entries condensed | ✅ Kept all content, removed redundancy |
-
-Paste and commit! 🚀
+- Rain delay alerts, resumptions and postponements now logged
