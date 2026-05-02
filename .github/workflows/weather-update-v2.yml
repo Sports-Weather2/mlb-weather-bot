@@ -56,6 +56,12 @@ jobs:
         run: |
           TODAY=$(TZ='America/Los_Angeles' date +%Y-%m-%d)
           echo "$TODAY" > last_weather_run.txt
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add last_weather_run.txt
+          git commit -m "🔒 Mark weather report as ran [skip ci]" || true
+          git pull --rebase origin main || git rebase --abort || true
+          git push || echo "⚠️ WARNING: Could not save run marker"
 
       - name: Keep workflow active (prevent cache staleness)
         if: steps.check_already_ran.outputs.already_ran == 'false'
@@ -68,14 +74,14 @@ jobs:
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-          git add last_weather_run.txt .github/.weather-keep-alive || true
+          git add .github/.weather-keep-alive || true
           git add analytics.json ANALYTICS.md 2>/dev/null || true
           git add STATUS.md || true
           git add config.json || true
           git diff --quiet && git diff --staged --quiet || \
-            git commit -m "📊 Update analytics and tracking [skip ci]"
-          git pull --rebase origin main || true
-          git push || echo "⚠️ WARNING: Push failed — dedup file may not persist"
+            git commit -m "📊 Update analytics and tracking [skip ci]" || true
+          git pull --rebase origin main || git rebase --abort || true
+          git push --force-with-lease || echo "⚠️ WARNING: Push failed — analytics may not persist"
 
       - name: Log skipped run (already ran today)
         if: steps.check_already_ran.outputs.already_ran == 'true'
@@ -90,5 +96,5 @@ jobs:
           git add STATUS.md || true
           git diff --quiet && git diff --staged --quiet || \
             git commit -m "📊 Update analytics (skipped run) [skip ci]"
-          git pull --rebase origin main || true
-          git push || echo "⚠️ WARNING: Push failed — skipped run analytics may not persist"
+          git pull --rebase origin main || git rebase --abort || true
+          git push --force-with-lease || echo "⚠️ WARNING: Push failed — skipped run analytics may not persist"
