@@ -1,62 +1,50 @@
 {
-  "823711": {
-    "state": "LIVE",
-    "matchup": "Toronto Blue Jays vs Minnesota Twins"
-  },
-  "824769": {
+  "824363": {
     "state": "PREVIEW",
-    "matchup": "Houston Astros vs Boston Red Sox"
+    "matchup": "New York Mets vs Colorado Rockies"
   },
-  "823387": {
+  "824283": {
     "state": "PREVIEW",
-    "matchup": "Cincinnati Reds vs Pittsburgh Pirates"
+    "matchup": "Boston Red Sox vs Detroit Tigers"
   },
-  "823555": {
+  "822984": {
     "state": "PREVIEW",
-    "matchup": "Baltimore Orioles vs New York Yankees"
+    "matchup": "Toronto Blue Jays vs Tampa Bay Rays"
   },
-  "822742": {
-    "state": "PREVIEW",
-    "matchup": "Milwaukee Brewers vs Washington Nationals"
-  },
-  "822987": {
-    "state": "PREVIEW",
-    "matchup": "San Francisco Giants vs Tampa Bay Rays"
-  },
-  "823875": {
+  "823874": {
     "state": "PREVIEW",
     "matchup": "Philadelphia Phillies vs Miami Marlins"
   },
-  "823065": {
+  "823552": {
     "state": "PREVIEW",
-    "matchup": "Los Angeles Dodgers vs St. Louis Cardinals"
+    "matchup": "Baltimore Orioles vs New York Yankees"
   },
-  "824687": {
+  "824684": {
     "state": "PREVIEW",
-    "matchup": "Arizona Diamondbacks vs Chicago Cubs"
+    "matchup": "Cincinnati Reds vs Chicago Cubs"
   },
-  "824364": {
+  "824120": {
     "state": "PREVIEW",
-    "matchup": "Atlanta Braves vs Colorado Rockies"
+    "matchup": "Cleveland Guardians vs Kansas City Royals"
   },
-  "825013": {
+  "823064": {
     "state": "PREVIEW",
-    "matchup": "Cleveland Guardians vs Athletics"
+    "matchup": "Milwaukee Brewers vs St. Louis Cardinals"
   },
-  "824043": {
+  "824201": {
     "state": "PREVIEW",
-    "matchup": "New York Mets vs Los Angeles Angels"
+    "matchup": "Los Angeles Dodgers vs Houston Astros"
   },
-  "823145": {
+  "824039": {
     "state": "PREVIEW",
-    "matchup": "Kansas City Royals vs Seattle Mariners"
+    "matchup": "Chicago White Sox vs Los Angeles Angels"
   },
-  "823307": {
+  "823143": {
     "state": "PREVIEW",
-    "matchup": "Chicago White Sox vs San Diego Padres"
+    "matchup": "Atlanta Braves vs Seattle Mariners"
   },
-  "824285": {
+  "823228": {
     "state": "PREVIEW",
-    "matchup": "Texas Rangers vs Detroit Tigers"
+    "matchup": "San Diego Padres vs San Francisco Giants"
   }
 }
