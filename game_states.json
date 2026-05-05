@@ -31,10 +31,6 @@
     "state": "PREVIEW",
     "matchup": "Cleveland Guardians vs Kansas City Royals"
   },
-  "823062": {
-    "state": "PREVIEW",
-    "matchup": "Milwaukee Brewers vs St. Louis Cardinals"
-  },
   "824200": {
     "state": "PREVIEW",
     "matchup": "Los Angeles Dodgers vs Houston Astros"
@@ -54,6 +50,10 @@
   "823227": {
     "state": "PREVIEW",
     "matchup": "San Diego Padres vs San Francisco Giants"
+  },
+  "823062": {
+    "state": "POSTPONED",
+    "matchup": "Milwaukee Brewers vs St. Louis Cardinals"
   },
   "824362": {
     "state": "POSTPONED",
