@@ -19,6 +19,8 @@ Fully automated weather monitoring system that tracks conditions for all MLB gam
   - Retractable roofs checked via MLB API for open/closed status
   - Reduces false alerts by ~27% (8 of 30 MLB stadiums have roof protection)
 - **⏱️ Real-Time Monitoring** - Live rain delay notifications during game hours (10 AM - 10 PM PT)
+- **📋 Why-Triggered Transparency** - Every HIGH RISK alert shows exactly what condition crossed the threshold
+- **🎯 Delay Probability Language** - Every HIGH RISK alert includes a delay probability rating
 - **🌍 Automatic DST Handling** - Seamlessly switches between Standard and Daylight Saving Time
 - **💰 Zero Cost** - Built on GitHub Actions free tier with free API services
 - **🔧 Zero Maintenance** - Fully automated, no manual intervention required
@@ -58,10 +60,12 @@ Daily reference channel for morning planning
 - Posts at 7:00 AM PT
 - Shows all games for next 24 hours (open-air and open-roof only)
 - Games sorted by risk level (High → Clear)
+- HIGH RISK games include Why-Triggered + Delay Probability lines
 
 ### **#high-risk-weather-alert**
 Urgent action channel for critical weather
 - Posts at 10:00 AM PT (high-risk games only)
+- Every HIGH RISK alert shows 📋 Why it fired and 🎯 Delay Probability
 - Real-time rain delay/postponement alerts
 - @channel mentions for visibility
 - Includes roof status context in delay alerts
@@ -78,9 +82,9 @@ Urgent action channel for critical weather
 
 2. **Mid-Morning Check (10:00 AM PT)**
    - Re-evaluates weather conditions using NWS hourly data
-   - Identifies high-risk games (≥75% rain, thunderstorms, etc.)
+   - Identifies high-risk games (≥80% rain, active thunderstorms, etc.)
    - Filters out closed-roof stadiums
-   - Posts alerts to #high-risk-weather-alert
+   - Posts alerts with Why-Triggered and Delay Probability to #high-risk-weather-alert
 
 3. **Real-Time Monitoring (10 AM - 10 PM PT)**
    - Checks MLB game status every 10 minutes via cron-job.org
@@ -92,9 +96,13 @@ Urgent action channel for critical weather
 
 ## 📊 Weather Impact Levels
 
-🔴 **HIGH RISK** - ≥75% rain OR thunderstorms OR temps ≤35°F/≥100°F OR wind gusts ≥30 mph
-🟡 **MONITOR** - 45-74% rain OR concerning conditions
-🟢 **CLEAR** - <45% rain, no severe weather
+🔴 **HIGH RISK** - ≥80% rain OR active thunderstorms (≥40% rain) OR temps ≤35°F/≥100°F OR wind gusts ≥30 mph
+🟡 **MONITOR** - 35-79% rain OR wind ≥20 mph OR concerning conditions
+🟢 **CLEAR** - <35% rain, no severe weather
+
+**Every HIGH RISK alert includes:**
+- 📋 **Why:** Exact condition that triggered the alert
+- 🎯 **Delay Probability:** 🔴 VERY HIGH / 🟠 HIGH / 🟡 ELEVATED
 
 ---
 
@@ -156,7 +164,7 @@ the same data source that powers The Weather Channel and AccuWeather.
 ### **High Risk Weather Alerts** (`high-risk-alert-v2.yml`)
 - **Schedule:** 10:00 AM PT daily
 - **Function:** Urgent alerts for high-risk games
-  (≥75% rain, thunderstorms, extreme conditions)
+  (≥80% rain, active thunderstorms, extreme conditions)
 - **Filtering:** Excludes fixed domes and closed retractable roofs
 - **Output:** #high-risk-weather-alert channel
 
@@ -201,6 +209,7 @@ the same data source that powers The Weather Channel and AccuWeather.
 - **🔔 Proactive Alerts:** Know about issues before games start
 - **🏟️ Smart Filtering:** 27% fewer false alerts with roof detection
 - **🌦️ High Accuracy:** ~92–95% NWS forecast vs ~85% previously
+- **📋 Full Transparency:** Every HIGH RISK alert shows why it fired
 - **💰 Cost Effective:** $0 annual operating cost, no API keys to manage
 
 ---
@@ -209,36 +218,40 @@ the same data source that powers The Weather Channel and AccuWeather.
 
 **Current Season:** 2026 Regular Season
 **Operational Status:** ✅ Fully Automated
-**Latest Update:** April 18, 2026 - Migrated to National Weather Service API (v2.0.0)
+**Latest Update:** May 2, 2026 - v2.0.11
 **Uptime:** 99.9% (GitHub Actions SLA)
 
 ---
 
 ## 📝 Recent Updates
 
+**May 2, 2026 — v2.0.11:**
+- 🐛 Fixed duplicate daily report — `last_weather_run.txt` now commits separately before analytics
+- 🔧 Added rebase abort fallback and force-with-lease push to prevent merge conflict failures
+
+**April 29-30, 2026 — v2.0.8 → v2.0.10:**
+- 🗂️ Fixed `config.json` never committing — was stuck on March 6 Spring Training data
+- 🏟️ Added Rate Field (White Sox) and UNIQLO Field at Dodger Stadium venue mappings
+- 📉 MONITOR rain threshold lowered 45% → 35% for better PropFinder Yellow alignment
+- 🛡️ Added defensive venue mappings for Daikin Park, loanDepot Park variants
+
+**April 25, 2026 — v2.0.7:**
+- 🐛 Fixed "Chance Showers And Thunderstorms" false HIGH RISK alerts
+- 🔧 Expanded thunderstorm exclusion list to 8 items
+
+**April 23, 2026 — v2.0.3 → v2.0.6:**
+- 🎯 Added Why-Triggered reason line to all HIGH RISK alerts
+- 🎯 Added Delay Probability language to all HIGH RISK alerts
+- 📉 Rain threshold tightened: HIGH RISK 75% → 80%
+- 💨 MONITOR wind threshold raised 15 → 20 mph
+- 🐛 Fixed false positive counter inflating every 10 minutes
+
 **April 18, 2026 — v2.0.0:**
 - 🌦️ Migrated weather API from OpenWeatherMap → National Weather Service (NWS)
 - 📡 NWS provides true hourly forecasts targeting exact game start time
 - 🎯 Forecast accuracy improved from ~85% → ~92–95%
-- 🔒 Rain threshold tightened: HIGH RISK 70% → 75% for NWS precision
-- 🌡️ Cold temp threshold updated: ≤20°F → ≤35°F
 - 🏟️ Toronto Blue Jays hardcoded as dome — Rogers Centre always excluded
 - 🗑️ WEATHER_API_KEY removed — NWS requires no API key
-- 🔧 Added request timeouts across all scripts
-- 📦 `game_pk` now saved to config.json for accurate prediction tracking
-
-**April 16, 2026:**
-- ✨ STATUS.md now auto-generates on every workflow run
-- 🔔 External cron-job.org trigger added for guaranteed 10-min monitoring
-
-**April 8, 2026:**
-- 🐛 Fixed duplicate alert bugs and state persistence issues
-- 📊 Fixed analytics tracking across all three workflows
-
-**March 28, 2026:**
-- ✨ Added intelligent roof-aware filtering
-- 🏟️ System now checks retractable roof status via MLB API
-- 📉 Reduced false weather alerts by ~27%
 
 ---
 
