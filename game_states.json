@@ -1,62 +1,42 @@
 {
-  "822985": {
+  "823551": {
     "state": "LIVE",
-    "matchup": "Toronto Blue Jays vs Tampa Bay Rays"
-  },
-  "823063": {
-    "state": "LIVE",
-    "matchup": "Milwaukee Brewers vs St. Louis Cardinals"
-  },
-  "824198": {
-    "state": "PREVIEW",
-    "matchup": "Los Angeles Dodgers vs Houston Astros"
-  },
-  "823226": {
-    "state": "PREVIEW",
-    "matchup": "San Diego Padres vs San Francisco Giants"
-  },
-  "824036": {
-    "state": "PREVIEW",
-    "matchup": "Chicago White Sox vs Los Angeles Angels"
-  },
-  "823141": {
-    "state": "PREVIEW",
-    "matchup": "Atlanta Braves vs Seattle Mariners"
-  },
-  "824282": {
-    "state": "PREVIEW",
-    "matchup": "Boston Red Sox vs Detroit Tigers"
-  },
-  "823470": {
-    "state": "PREVIEW",
-    "matchup": "Athletics vs Philadelphia Phillies"
-  },
-  "823872": {
-    "state": "PREVIEW",
-    "matchup": "Baltimore Orioles vs Miami Marlins"
-  },
-  "822740": {
-    "state": "PREVIEW",
-    "matchup": "Minnesota Twins vs Washington Nationals"
-  },
-  "823550": {
-    "state": "PREVIEW",
     "matchup": "Texas Rangers vs New York Yankees"
   },
-  "824683": {
-    "state": "PREVIEW",
-    "matchup": "Cincinnati Reds vs Chicago Cubs"
+  "822741": {
+    "state": "LIVE",
+    "matchup": "Minnesota Twins vs Washington Nationals"
   },
-  "824118": {
+  "824117": {
     "state": "PREVIEW",
     "matchup": "Cleveland Guardians vs Kansas City Royals"
   },
-  "824361": {
+  "824681": {
+    "state": "PREVIEW",
+    "matchup": "Cincinnati Reds vs Chicago Cubs"
+  },
+  "824362": {
     "state": "PREVIEW",
     "matchup": "New York Mets vs Colorado Rockies"
   },
-  "825091": {
+  "825090": {
     "state": "PREVIEW",
     "matchup": "Pittsburgh Pirates vs Arizona Diamondbacks"
+  },
+  "823467": {
+    "state": "PREVIEW",
+    "matchup": "Athletics vs Philadelphia Phillies"
+  },
+  "823870": {
+    "state": "PREVIEW",
+    "matchup": "Baltimore Orioles vs Miami Marlins"
+  },
+  "824767": {
+    "state": "PREVIEW",
+    "matchup": "Tampa Bay Rays vs Boston Red Sox"
+  },
+  "823306": {
+    "state": "PREVIEW",
+    "matchup": "St. Louis Cardinals vs San Diego Padres"
   }
 }
