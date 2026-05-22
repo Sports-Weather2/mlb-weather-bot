@@ -3,10 +3,6 @@
     "state": "PREVIEW",
     "matchup": "Houston Astros vs Chicago Cubs"
   },
-  "824518": {
-    "state": "PREVIEW",
-    "matchup": "St. Louis Cardinals vs Cincinnati Reds"
-  },
   "823461": {
     "state": "PREVIEW",
     "matchup": "Cleveland Guardians vs Philadelphia Phillies"
@@ -58,5 +54,9 @@
   "823223": {
     "state": "PREVIEW",
     "matchup": "Chicago White Sox vs San Francisco Giants"
+  },
+  "824518": {
+    "state": "POSTPONED",
+    "matchup": "St. Louis Cardinals vs Cincinnati Reds"
   }
 }
