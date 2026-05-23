@@ -35,14 +35,6 @@
     {
       "date": "2026-05-23",
       "time": "13:05",
-      "opponent": "Detroit Tigers vs Baltimore Orioles",
-      "location": "Baltimore,US",
-      "venue": "Oriole Park at Camden Yards",
-      "game_pk": 824840
-    },
-    {
-      "date": "2026-05-23",
-      "time": "13:05",
       "opponent": "Cleveland Guardians vs Philadelphia Phillies",
       "location": "Philadelphia,US",
       "venue": "Citizens Bank Park",
@@ -127,6 +119,14 @@
       "location": "New York,US",
       "venue": "Yankee Stadium",
       "game_pk": 823543
+    },
+    {
+      "date": "2026-05-23",
+      "time": "13:05",
+      "opponent": "Detroit Tigers vs Baltimore Orioles",
+      "location": "Baltimore,US",
+      "venue": "Oriole Park at Camden Yards",
+      "game_pk": 824840
     }
   ]
 }
