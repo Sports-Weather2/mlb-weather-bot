@@ -1,62 +1,38 @@
 {
-  "824832": {
-    "state": "LIVE",
-    "matchup": "Toronto Blue Jays vs Baltimore Orioles"
-  },
-  "822729": {
+  "822974": {
     "state": "PREVIEW",
-    "matchup": "San Diego Padres vs Washington Nationals"
+    "matchup": "Detroit Tigers vs Tampa Bay Rays"
   },
-  "823373": {
+  "822730": {
     "state": "PREVIEW",
-    "matchup": "Minnesota Twins vs Pittsburgh Pirates"
+    "matchup": "Miami Marlins vs Washington Nationals"
   },
-  "824430": {
+  "824510": {
     "state": "PREVIEW",
-    "matchup": "Boston Red Sox vs Cleveland Guardians"
+    "matchup": "Kansas City Royals vs Cincinnati Reds"
   },
-  "822976": {
+  "823702": {
     "state": "PREVIEW",
-    "matchup": "Los Angeles Angels vs Tampa Bay Rays"
+    "matchup": "Chicago White Sox vs Minnesota Twins"
   },
-  "824512": {
+  "823781": {
     "state": "PREVIEW",
-    "matchup": "Atlanta Braves vs Cincinnati Reds"
+    "matchup": "San Francisco Giants vs Milwaukee Brewers"
   },
-  "823621": {
+  "823050": {
     "state": "PREVIEW",
-    "matchup": "Miami Marlins vs New York Mets"
+    "matchup": "Texas Rangers vs St. Louis Cardinals"
   },
-  "824592": {
+  "824027": {
     "state": "PREVIEW",
-    "matchup": "Detroit Tigers vs Chicago White Sox"
+    "matchup": "Colorado Rockies vs Los Angeles Angels"
   },
-  "824187": {
+  "825078": {
     "state": "PREVIEW",
-    "matchup": "Milwaukee Brewers vs Houston Astros"
+    "matchup": "Los Angeles Dodgers vs Arizona Diamondbacks"
   },
-  "822895": {
+  "823131": {
     "state": "PREVIEW",
-    "matchup": "Kansas City Royals vs Texas Rangers"
-  },
-  "824354": {
-    "state": "PREVIEW",
-    "matchup": "San Francisco Giants vs Colorado Rockies"
-  },
-  "825001": {
-    "state": "PREVIEW",
-    "matchup": "New York Yankees vs Athletics"
-  },
-  "823133": {
-    "state": "PREVIEW",
-    "matchup": "Arizona Diamondbacks vs Seattle Mariners"
-  },
-  "823944": {
-    "state": "PREVIEW",
-    "matchup": "Philadelphia Phillies vs Los Angeles Dodgers"
-  },
-  "823053": {
-    "state": "PREVIEW",
-    "matchup": "Chicago Cubs vs St. Louis Cardinals"
+    "matchup": "New York Mets vs Seattle Mariners"
   }
 }
