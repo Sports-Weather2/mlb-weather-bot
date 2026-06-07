@@ -43,10 +43,6 @@
     "state": "PREVIEW",
     "matchup": "Cleveland Guardians vs Texas Rangers"
   },
-  "823539": {
-    "state": "DELAYED",
-    "matchup": "Boston Red Sox vs New York Yankees"
-  },
   "824351": {
     "state": "PREVIEW",
     "matchup": "Milwaukee Brewers vs Colorado Rockies"
@@ -58,5 +54,9 @@
   "823292": {
     "state": "PREVIEW",
     "matchup": "New York Mets vs San Diego Padres"
+  },
+  "823539": {
+    "state": "POSTPONED",
+    "matchup": "Boston Red Sox vs New York Yankees"
   }
 }
