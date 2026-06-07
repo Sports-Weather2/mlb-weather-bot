@@ -7,7 +7,7 @@
 ## 🟢 CURRENT PERFORMANCE
 
 **Status:** Fully Operational
-**Last Updated:** June 07, 2026 10:30 AM PT
+**Last Updated:** June 07, 2026 10:40 AM PT
 **Season:** Regular Season 2026
 
 ---
@@ -17,10 +17,10 @@
 | Metric | Count |
 |--------|-------|
 | 📅 Games Monitored | 565 |
-| 📬 Total Alerts Sent | 248 |
+| 📬 Total Alerts Sent | 249 |
 | 📊 Daily Reports | 64 |
 | 🚨 High-Risk Alerts | 73 |
-| ⏸️ Delay Alerts | 53 |
+| ⏸️ Delay Alerts | 54 |
 | ▶️ Resumption Alerts | 38 |
 | 📅 Postponement Alerts | 20 |
 
@@ -30,11 +30,11 @@
 
 | Metric | Value |
 |--------|-------|
-| Actual Delays Occurred | 43 |
+| Actual Delays Occurred | 44 |
 | Correctly Predicted | 20 |
-| **Accuracy Rate** | **46.5%** |
+| **Accuracy Rate** | **45.5%** |
 | False Positives | 0 |
-| False Negatives | 23 |
+| False Negatives | 24 |
 
 ---
 
@@ -42,8 +42,8 @@
 
 | Metric | Count | Percentage |
 |--------|-------|------------|
-| Total Workflow Runs | 8688 | - |
-| ✅ Successful | 4783 | 55.1% |
+| Total Workflow Runs | 8689 | - |
+| ✅ Successful | 4784 | 55.1% |
 | ❌ Failed | 0 | 0.0% |
 | ⏭️ Skipped (outside game hours) | 3905 | 44.9% |
 
@@ -55,7 +55,7 @@
 
 ### Today (June 07, 2026)
 
-- 📊 Alerts sent: 2
+- 📊 Alerts sent: 3
 - 📅 Games monitored: 10
 
 ### Yesterday (June 06, 2026)
@@ -68,7 +68,7 @@
 ## 💡 Key Insights
 
 **Time Saved:** ~62 hours this season
-**Estimated Value:** $3100 in operational efficiency
+**Estimated Value:** $3112 in operational efficiency
 
 **Days Active:** 73
 **Active Game Days:** 73
@@ -85,4 +85,4 @@ workflow run.
 
 ---
 
-_Last generated: June 07, 2026 10:30 AM PT_
+_Last generated: June 07, 2026 10:40 AM PT_
