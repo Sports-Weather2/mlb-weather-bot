@@ -1,33 +1,61 @@
 {
-  "824829": {
+  "824830": {
     "state": "PREVIEW",
     "matchup": "Seattle Mariners vs Baltimore Orioles"
   },
-  "822972": {
+  "823374": {
+    "state": "PREVIEW",
+    "matchup": "Los Angeles Dodgers vs Pittsburgh Pirates"
+  },
+  "822969": {
     "state": "PREVIEW",
     "matchup": "Boston Red Sox vs Tampa Bay Rays"
   },
-  "824427": {
+  "824267": {
+    "state": "PREVIEW",
+    "matchup": "Minnesota Twins vs Detroit Tigers"
+  },
+  "823858": {
+    "state": "PREVIEW",
+    "matchup": "Arizona Diamondbacks vs Miami Marlins"
+  },
+  "824429": {
     "state": "PREVIEW",
     "matchup": "New York Yankees vs Cleveland Guardians"
   },
-  "822806": {
+  "822805": {
     "state": "PREVIEW",
     "matchup": "Philadelphia Phillies vs Toronto Blue Jays"
   },
-  "824025": {
+  "823620": {
+    "state": "PREVIEW",
+    "matchup": "St. Louis Cardinals vs New York Mets"
+  },
+  "824105": {
+    "state": "PREVIEW",
+    "matchup": "Texas Rangers vs Kansas City Royals"
+  },
+  "824591": {
+    "state": "PREVIEW",
+    "matchup": "Atlanta Braves vs Chicago White Sox"
+  },
+  "824347": {
+    "state": "PREVIEW",
+    "matchup": "Chicago Cubs vs Colorado Rockies"
+  },
+  "824023": {
     "state": "PREVIEW",
     "matchup": "Houston Astros vs Los Angeles Angels"
   },
-  "823289": {
+  "823290": {
     "state": "PREVIEW",
     "matchup": "Cincinnati Reds vs San Diego Padres"
   },
-  "823218": {
+  "823214": {
     "state": "PREVIEW",
     "matchup": "Washington Nationals vs San Francisco Giants"
   },
-  "824998": {
+  "824999": {
     "state": "PREVIEW",
     "matchup": "Milwaukee Brewers vs Athletics"
   }
