@@ -19,10 +19,6 @@
     "state": "PREVIEW",
     "matchup": "Arizona Diamondbacks vs Cincinnati Reds"
   },
-  "824424": {
-    "state": "PREVIEW",
-    "matchup": "Detroit Tigers vs Cleveland Guardians"
-  },
   "823615": {
     "state": "PREVIEW",
     "matchup": "Atlanta Braves vs New York Mets"
@@ -58,5 +54,9 @@
   "824751": {
     "state": "PREVIEW",
     "matchup": "Texas Rangers vs Boston Red Sox"
+  },
+  "824424": {
+    "state": "POSTPONED",
+    "matchup": "Detroit Tigers vs Cleveland Guardians"
   }
 }
