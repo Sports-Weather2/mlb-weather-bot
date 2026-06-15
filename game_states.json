@@ -1,62 +1,42 @@
 {
-  "823368": {
-    "state": "LIVE",
-    "matchup": "Miami Marlins vs Pittsburgh Pirates"
-  },
-  "824823": {
+  "823452": {
     "state": "PREVIEW",
-    "matchup": "San Diego Padres vs Baltimore Orioles"
+    "matchup": "Miami Marlins vs Philadelphia Phillies"
   },
-  "822722": {
+  "822724": {
     "state": "PREVIEW",
-    "matchup": "Seattle Mariners vs Washington Nationals"
+    "matchup": "Kansas City Royals vs Washington Nationals"
   },
-  "822801": {
+  "824505": {
     "state": "PREVIEW",
-    "matchup": "New York Yankees vs Toronto Blue Jays"
+    "matchup": "New York Mets vs Cincinnati Reds"
   },
-  "824506": {
-    "state": "LIVE",
-    "matchup": "Arizona Diamondbacks vs Cincinnati Reds"
-  },
-  "823615": {
+  "823046": {
     "state": "PREVIEW",
-    "matchup": "Atlanta Braves vs New York Mets"
+    "matchup": "San Diego Padres vs St. Louis Cardinals"
   },
-  "824099": {
+  "824666": {
     "state": "PREVIEW",
-    "matchup": "Houston Astros vs Kansas City Royals"
+    "matchup": "Colorado Rockies vs Chicago Cubs"
   },
-  "823693": {
+  "822887": {
     "state": "PREVIEW",
-    "matchup": "St. Louis Cardinals vs Minnesota Twins"
+    "matchup": "Minnesota Twins vs Texas Rangers"
   },
-  "824586": {
+  "824181": {
     "state": "PREVIEW",
-    "matchup": "Los Angeles Dodgers vs Chicago White Sox"
+    "matchup": "Detroit Tigers vs Houston Astros"
   },
-  "823777": {
+  "825071": {
     "state": "PREVIEW",
-    "matchup": "Philadelphia Phillies vs Milwaukee Brewers"
+    "matchup": "Los Angeles Angels vs Arizona Diamondbacks"
   },
-  "824994": {
+  "824993": {
     "state": "PREVIEW",
-    "matchup": "Colorado Rockies vs Athletics"
+    "matchup": "Pittsburgh Pirates vs Athletics"
   },
-  "823212": {
+  "823938": {
     "state": "PREVIEW",
-    "matchup": "Chicago Cubs vs San Francisco Giants"
-  },
-  "824021": {
-    "state": "PREVIEW",
-    "matchup": "Tampa Bay Rays vs Los Angeles Angels"
-  },
-  "824751": {
-    "state": "PREVIEW",
-    "matchup": "Texas Rangers vs Boston Red Sox"
-  },
-  "824424": {
-    "state": "POSTPONED",
-    "matchup": "Detroit Tigers vs Cleveland Guardians"
+    "matchup": "Tampa Bay Rays vs Los Angeles Dodgers"
   }
 }
