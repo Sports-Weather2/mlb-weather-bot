@@ -19,10 +19,6 @@
     "state": "PREVIEW",
     "matchup": "Houston Astros vs Toronto Blue Jays"
   },
-  "823613": {
-    "state": "PREVIEW",
-    "matchup": "Chicago Cubs vs New York Mets"
-  },
   "824502": {
     "state": "PREVIEW",
     "matchup": "Milwaukee Brewers vs Cincinnati Reds"
@@ -50,5 +46,9 @@
   "823288": {
     "state": "PREVIEW",
     "matchup": "Atlanta Braves vs San Diego Padres"
+  },
+  "823613": {
+    "state": "POSTPONED",
+    "matchup": "Chicago Cubs vs New York Mets"
   }
 }
