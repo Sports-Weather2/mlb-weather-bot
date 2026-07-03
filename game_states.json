@@ -1,38 +1,54 @@
 {
-  "823442": {
-    "state": "LIVE",
-    "matchup": "Pittsburgh Pirates vs Philadelphia Phillies"
-  },
-  "823765": {
+  "824659": {
     "state": "PREVIEW",
-    "matchup": "Cincinnati Reds vs Milwaukee Brewers"
+    "matchup": "St. Louis Cardinals vs Chicago Cubs"
   },
-  "824335": {
+  "822714": {
     "state": "PREVIEW",
-    "matchup": "Miami Marlins vs Colorado Rockies"
+    "matchup": "Pittsburgh Pirates vs Washington Nationals"
   },
-  "824416": {
+  "823527": {
+    "state": "PREVIEW",
+    "matchup": "Minnesota Twins vs New York Yankees"
+  },
+  "824498": {
+    "state": "PREVIEW",
+    "matchup": "Baltimore Orioles vs Cincinnati Reds"
+  },
+  "824417": {
     "state": "PREVIEW",
     "matchup": "Chicago White Sox vs Cleveland Guardians"
   },
-  "824906": {
+  "824904": {
     "state": "PREVIEW",
-    "matchup": "St. Louis Cardinals vs Atlanta Braves"
+    "matchup": "New York Mets vs Atlanta Braves"
   },
-  "824093": {
+  "824336": {
     "state": "PREVIEW",
-    "matchup": "Tampa Bay Rays vs Kansas City Royals"
+    "matchup": "San Francisco Giants vs Colorado Rockies"
   },
-  "822884": {
+  "824173": {
     "state": "PREVIEW",
-    "matchup": "Detroit Tigers vs Texas Rangers"
+    "matchup": "Tampa Bay Rays vs Houston Astros"
   },
-  "823119": {
+  "824013": {
     "state": "PREVIEW",
-    "matchup": "Los Angeles Angels vs Seattle Mariners"
+    "matchup": "Boston Red Sox vs Los Angeles Angels"
   },
-  "823935": {
+  "824982": {
+    "state": "PREVIEW",
+    "matchup": "Miami Marlins vs Athletics"
+  },
+  "825062": {
+    "state": "PREVIEW",
+    "matchup": "Milwaukee Brewers vs Arizona Diamondbacks"
+  },
+  "823933": {
     "state": "PREVIEW",
     "matchup": "San Diego Padres vs Los Angeles Dodgers"
+  },
+  "823120": {
+    "state": "PREVIEW",
+    "matchup": "Toronto Blue Jays vs Seattle Mariners"
   }
 }
