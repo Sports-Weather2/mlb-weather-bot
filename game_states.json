@@ -1,54 +1,62 @@
 {
-  "824659": {
+  "822716": {
     "state": "LIVE",
-    "matchup": "St. Louis Cardinals vs Chicago Cubs"
-  },
-  "822714": {
-    "state": "PREVIEW",
     "matchup": "Pittsburgh Pirates vs Washington Nationals"
   },
-  "823527": {
-    "state": "LIVE",
+  "823526": {
+    "state": "PREVIEW",
     "matchup": "Minnesota Twins vs New York Yankees"
   },
-  "824498": {
+  "822882": {
+    "state": "PREVIEW",
+    "matchup": "Detroit Tigers vs Texas Rangers"
+  },
+  "823118": {
+    "state": "PREVIEW",
+    "matchup": "Toronto Blue Jays vs Seattle Mariners"
+  },
+  "824499": {
     "state": "PREVIEW",
     "matchup": "Baltimore Orioles vs Cincinnati Reds"
   },
-  "824417": {
-    "state": "LIVE",
-    "matchup": "Chicago White Sox vs Cleveland Guardians"
-  },
-  "824904": {
-    "state": "PREVIEW",
-    "matchup": "New York Mets vs Atlanta Braves"
-  },
-  "824336": {
-    "state": "PREVIEW",
-    "matchup": "San Francisco Giants vs Colorado Rockies"
-  },
-  "824173": {
+  "824171": {
     "state": "PREVIEW",
     "matchup": "Tampa Bay Rays vs Houston Astros"
   },
-  "824013": {
+  "824415": {
+    "state": "PREVIEW",
+    "matchup": "Chicago White Sox vs Cleveland Guardians"
+  },
+  "824658": {
+    "state": "PREVIEW",
+    "matchup": "St. Louis Cardinals vs Chicago Cubs"
+  },
+  "824903": {
+    "state": "PREVIEW",
+    "matchup": "New York Mets vs Atlanta Braves"
+  },
+  "824334": {
+    "state": "PREVIEW",
+    "matchup": "San Francisco Giants vs Colorado Rockies"
+  },
+  "824092": {
+    "state": "PREVIEW",
+    "matchup": "Philadelphia Phillies vs Kansas City Royals"
+  },
+  "824012": {
     "state": "PREVIEW",
     "matchup": "Boston Red Sox vs Los Angeles Angels"
   },
-  "824982": {
+  "824983": {
     "state": "PREVIEW",
     "matchup": "Miami Marlins vs Athletics"
   },
-  "825062": {
+  "825063": {
     "state": "PREVIEW",
     "matchup": "Milwaukee Brewers vs Arizona Diamondbacks"
   },
-  "823933": {
+  "823932": {
     "state": "PREVIEW",
     "matchup": "San Diego Padres vs Los Angeles Dodgers"
-  },
-  "823120": {
-    "state": "PREVIEW",
-    "matchup": "Toronto Blue Jays vs Seattle Mariners"
   }
 }
