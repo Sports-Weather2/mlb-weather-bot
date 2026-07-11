@@ -3,10 +3,6 @@
     "state": "PREVIEW",
     "matchup": "Philadelphia Phillies vs Detroit Tigers"
   },
-  "823357": {
-    "state": "DELAYED",
-    "matchup": "Milwaukee Brewers vs Pittsburgh Pirates"
-  },
   "822709": {
     "state": "DELAYED",
     "matchup": "New York Yankees vs Washington Nationals"
@@ -58,5 +54,9 @@
   "823200": {
     "state": "PREVIEW",
     "matchup": "Colorado Rockies vs San Francisco Giants"
+  },
+  "823357": {
+    "state": "POSTPONED",
+    "matchup": "Milwaukee Brewers vs Pittsburgh Pirates"
   }
 }
