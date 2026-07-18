@@ -26,6 +26,14 @@
     },
     {
       "date": "2026-07-18",
+      "time": "12:05",
+      "opponent": "New York Mets vs Philadelphia Phillies",
+      "location": "Philadelphia,US",
+      "venue": "Citizens Bank Park",
+      "game_pk": 823441
+    },
+    {
+      "date": "2026-07-18",
       "time": "12:07",
       "opponent": "Chicago White Sox vs Toronto Blue Jays",
       "location": "Toronto,CA",
@@ -39,14 +47,6 @@
       "location": "Denver,US",
       "venue": "Coors Field",
       "game_pk": 824331
-    },
-    {
-      "date": "2026-07-18",
-      "time": "13:05",
-      "opponent": "New York Mets vs Philadelphia Phillies",
-      "location": "Philadelphia,US",
-      "venue": "Citizens Bank Park",
-      "game_pk": 823441
     },
     {
       "date": "2026-07-18",
