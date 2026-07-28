@@ -58,14 +58,6 @@
     },
     {
       "date": "2026-07-28",
-      "time": "16:10",
-      "opponent": "Atlanta Braves vs New York Mets",
-      "location": "New York,US",
-      "venue": "Citi Field",
-      "game_pk": 823598
-    },
-    {
-      "date": "2026-07-28",
       "time": "16:40",
       "opponent": "Kansas City Royals vs Minnesota Twins",
       "location": "Minneapolis,US",
@@ -127,6 +119,14 @@
       "location": "Los Angeles,US",
       "venue": "UNIQLO Field at Dodger Stadium",
       "game_pk": 823923
+    },
+    {
+      "date": "2026-07-28",
+      "time": "16:10",
+      "opponent": "Atlanta Braves vs New York Mets",
+      "location": "New York,US",
+      "venue": "Citi Field",
+      "game_pk": 823598
     }
   ]
 }
