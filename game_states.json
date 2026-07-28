@@ -27,10 +27,6 @@
     "state": "PREVIEW",
     "matchup": "Toronto Blue Jays vs Washington Nationals"
   },
-  "823598": {
-    "state": "PREVIEW",
-    "matchup": "Atlanta Braves vs New York Mets"
-  },
   "823676": {
     "state": "PREVIEW",
     "matchup": "Kansas City Royals vs Minnesota Twins"
@@ -62,5 +58,9 @@
   "823923": {
     "state": "PREVIEW",
     "matchup": "Seattle Mariners vs Los Angeles Dodgers"
+  },
+  "823598": {
+    "state": "POSTPONED",
+    "matchup": "Atlanta Braves vs New York Mets"
   }
 }
