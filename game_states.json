@@ -1,58 +1,50 @@
 {
-  "822688": {
-    "state": "LIVE",
+  "824911": {
+    "state": "PREVIEW",
+    "matchup": "San Francisco Giants vs Atlanta Braves"
+  },
+  "824473": {
+    "state": "PREVIEW",
+    "matchup": "San Diego Padres vs Cincinnati Reds"
+  },
+  "822932": {
+    "state": "PREVIEW",
+    "matchup": "New York Mets vs Tampa Bay Rays"
+  },
+  "824719": {
+    "state": "PREVIEW",
+    "matchup": "Seattle Mariners vs Boston Red Sox"
+  },
+  "822689": {
+    "state": "PREVIEW",
     "matchup": "Miami Marlins vs Washington Nationals"
   },
-  "824876": {
+  "823663": {
     "state": "PREVIEW",
-    "matchup": "Colorado Rockies vs Atlanta Braves"
+    "matchup": "Detroit Tigers vs Minnesota Twins"
   },
-  "823502": {
+  "824635": {
     "state": "PREVIEW",
-    "matchup": "Boston Red Sox vs New York Yankees"
+    "matchup": "Milwaukee Brewers vs Chicago Cubs"
   },
-  "822766": {
+  "822855": {
     "state": "PREVIEW",
-    "matchup": "Seattle Mariners vs Toronto Blue Jays"
+    "matchup": "Athletics vs Texas Rangers"
   },
-  "824393": {
-    "state": "LIVE",
-    "matchup": "Kansas City Royals vs Cleveland Guardians"
-  },
-  "824232": {
-    "state": "LIVE",
-    "matchup": "Los Angeles Dodgers vs Detroit Tigers"
-  },
-  "822933": {
+  "824149": {
     "state": "PREVIEW",
-    "matchup": "San Diego Padres vs Tampa Bay Rays"
+    "matchup": "Chicago White Sox vs Houston Astros"
   },
-  "823662": {
+  "824314": {
     "state": "PREVIEW",
-    "matchup": "Chicago White Sox vs Minnesota Twins"
+    "matchup": "Baltimore Orioles vs Colorado Rockies"
   },
-  "823740": {
+  "823982": {
     "state": "PREVIEW",
-    "matchup": "Texas Rangers vs Milwaukee Brewers"
+    "matchup": "New York Yankees vs Los Angeles Angels"
   },
-  "823010": {
+  "825040": {
     "state": "PREVIEW",
-    "matchup": "Pittsburgh Pirates vs St. Louis Cardinals"
-  },
-  "823580": {
-    "state": "PREVIEW",
-    "matchup": "Houston Astros vs New York Mets"
-  },
-  "824959": {
-    "state": "PREVIEW",
-    "matchup": "Baltimore Orioles vs Athletics"
-  },
-  "823987": {
-    "state": "PREVIEW",
-    "matchup": "Philadelphia Phillies vs Los Angeles Angels"
-  },
-  "824636": {
-    "state": "LIVE",
-    "matchup": "Cincinnati Reds vs Chicago Cubs"
+    "matchup": "Philadelphia Phillies vs Arizona Diamondbacks"
   }
 }
