@@ -31,8 +31,8 @@
 
 | Metric | Value |
 |--------|-------|
-| **Games Monitored** | 1405 |
-| **Total Alerts Sent** | 593 |
+| **Games Monitored** | 1414 |
+| **Total Alerts Sent** | 594 |
 | **Delay Prediction Accuracy** | 38.8% (50/129) |
 | **False Positives** | 0 |
 | **System Uptime** | 54.6% |
