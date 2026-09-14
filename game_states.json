@@ -1,62 +1,42 @@
 {
-  "824225": {
-    "state": "LIVE",
-    "matchup": "Colorado Rockies vs Detroit Tigers"
-  },
-  "822682": {
+  "824465": {
     "state": "PREVIEW",
-    "matchup": "Los Angeles Angels vs Washington Nationals"
+    "matchup": "Los Angeles Dodgers vs Cincinnati Reds"
   },
-  "824869": {
+  "824386": {
     "state": "PREVIEW",
-    "matchup": "Philadelphia Phillies vs Atlanta Braves"
+    "matchup": "Chicago White Sox vs Cleveland Guardians"
   },
-  "823495": {
+  "822765": {
     "state": "PREVIEW",
-    "matchup": "New York Mets vs New York Yankees"
+    "matchup": "Detroit Tigers vs Toronto Blue Jays"
   },
-  "822764": {
+  "823575": {
     "state": "PREVIEW",
-    "matchup": "Baltimore Orioles vs Toronto Blue Jays"
+    "matchup": "Baltimore Orioles vs New York Mets"
   },
-  "822928": {
+  "824629": {
     "state": "PREVIEW",
-    "matchup": "Houston Astros vs Tampa Bay Rays"
+    "matchup": "Atlanta Braves vs Chicago Cubs"
   },
-  "823815": {
+  "823656": {
     "state": "PREVIEW",
-    "matchup": "Los Angeles Dodgers vs Miami Marlins"
+    "matchup": "New York Yankees vs Minnesota Twins"
   },
-  "823658": {
+  "823006": {
     "state": "PREVIEW",
-    "matchup": "Cleveland Guardians vs Minnesota Twins"
+    "matchup": "San Francisco Giants vs St. Louis Cardinals"
   },
-  "823734": {
+  "824308": {
     "state": "PREVIEW",
-    "matchup": "Cincinnati Reds vs Milwaukee Brewers"
+    "matchup": "San Diego Padres vs Colorado Rockies"
   },
-  "823008": {
+  "823981": {
     "state": "PREVIEW",
-    "matchup": "Chicago White Sox vs St. Louis Cardinals"
+    "matchup": "Seattle Mariners vs Los Angeles Angels"
   },
-  "824628": {
+  "825034": {
     "state": "PREVIEW",
-    "matchup": "Pittsburgh Pirates vs Chicago Cubs"
-  },
-  "824708": {
-    "state": "LIVE",
-    "matchup": "Kansas City Royals vs Boston Red Sox"
-  },
-  "824952": {
-    "state": "PREVIEW",
-    "matchup": "Seattle Mariners vs Athletics"
-  },
-  "825033": {
-    "state": "PREVIEW",
-    "matchup": "Texas Rangers vs Arizona Diamondbacks"
-  },
-  "823171": {
-    "state": "PREVIEW",
-    "matchup": "San Diego Padres vs San Francisco Giants"
+    "matchup": "Miami Marlins vs Arizona Diamondbacks"
   }
 }
