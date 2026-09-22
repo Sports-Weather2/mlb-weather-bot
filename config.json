@@ -18,14 +18,6 @@
     },
     {
       "date": "2026-09-22",
-      "time": "15:35",
-      "opponent": "Toronto Blue Jays vs Baltimore Orioles",
-      "location": "Baltimore,US",
-      "venue": "Oriole Park at Camden Yards",
-      "game_pk": 824785
-    },
-    {
-      "date": "2026-09-22",
       "time": "15:40",
       "opponent": "Washington Nationals vs Detroit Tigers",
       "location": "Detroit,US",
@@ -127,6 +119,14 @@
       "location": "Los Angeles,US",
       "venue": "UNIQLO Field at Dodger Stadium",
       "game_pk": 823897
+    },
+    {
+      "date": "2026-09-22",
+      "time": "15:35",
+      "opponent": "Toronto Blue Jays vs Baltimore Orioles",
+      "location": "Baltimore,US",
+      "venue": "Oriole Park at Camden Yards",
+      "game_pk": 824785
     }
   ]
 }
